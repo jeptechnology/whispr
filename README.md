@@ -1,6 +1,3 @@
-Your repository currently does not have a README.md file. Here is a suggested README content:
-
-```
 # WHISPR - Wiser Home Integrated Support Package Reader.
 
 This repository contains a support package offline viewer for Wiser Home systems.
@@ -43,6 +40,3 @@ We welcome contributions! Please read our [contributing guide](CONTRIBUTING.md) 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-```
-
-Would you like me to create this file in your repository?
