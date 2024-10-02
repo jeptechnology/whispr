@@ -19,6 +19,7 @@
     "@electron-forge/maker-zip": "^7.5.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
     "@electron-forge/plugin-fuses": "^7.5.0",
+    "@electron-forge/publisher-github": "^7.5.0",
     "@electron/fuses": "^1.8.0",
     "electron": "32.1.2"
   },
@@ -31,8 +32,8 @@
   "dependencies": {
     "decompress": "^4.2.1",
     "decompress-targz": "^4.1.1",
+    "electron-squirrel-startup": "^1.0.1",
     "express": "^4.21.0",
-    "multer": "^1.4.5-lts.1",
-    "electron-squirrel-startup": "^1.0.1"
+    "multer": "^1.4.5-lts.1"
   }
 }
