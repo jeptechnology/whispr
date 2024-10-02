@@ -18,6 +18,7 @@ const createWindow = () => {
     },
     autoHideMenuBar: true,
     useContentSize: true,
+    icon: path.join(__dirname, 'public', 'images', 'icon.ico'),
   });
 
   // and load the index.html from the express webserver
