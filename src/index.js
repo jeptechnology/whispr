@@ -1,48 +1,49 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('node:path');
 
-const decompress = require('decompress');
-const decompressTargz = require('decompress-targz');
+// const decompress = require('decompress');
+// const decompressTargz = require('decompress-targz');
 
-const express = require('express');
-const webserver = express();
-const port = 3000;
+// const express = require('express');
+// const webserver = express();
+// const port = 3000;
 
-const multer = require('multer');
-const upload = multer({ dest: __dirname + '/uploads/' });
+// const multer = require('multer');
+// const upload = multer({ dest: __dirname + '/uploads/' });
 
-webserver.use(express.json());
-webserver.use(express.static(__dirname + '/public'));
+// webserver.use(express.json());
+// webserver.use(express.static(__dirname + '/public'));
 
-webserver.post('/upload', upload.single('support_package'), function (req, res, next) {
-   // req.file is the `avatar` file
-   // req.body will hold the text fields, if there were any
-   console.log("Attempting to untar: ", req.file.path);
+// webserver.post('/upload', upload.single('support_package'), function (req, res, next) {
+//    // req.file is the `avatar` file
+//    // req.body will hold the text fields, if there were any
+//    console.log("Attempting to untar: ", req.file.path);
 
-   decompress(req.file.path, 'public/package', {
-      plugins: [
-          decompressTargz()
-      ]
-   }).then(() => {
-         console.log('Files decompressed');
-         res.json({ message: 'File uploaded successfully!' });
-   });
+//    decompress(req.file.path, 'public/package', {
+//       plugins: [
+//           decompressTargz()
+//       ]
+//    }).then(() => {
+//          console.log('Files decompressed');
+//          res.json({ message: 'File uploaded successfully!' });
+//    });
   
- })
+//  })
  
-webserver.listen(port, () => {
-   console.log(`Server is running on port ${port}`);
-   });
+// webserver.listen(port, () => {
+//    console.log(`Server is running on port ${port}`);
+//    });
 
-webserver.get('/api', (req, res) => {
-   res.json({ message: 'Hello, world!' });
-   });
+// webserver.get('/api', (req, res) => {
+//    res.json({ message: 'Hello, world!' });
+//    });
 
-webserver.post('/api', (req, res) => {
-   console.log(req.body);
-   res.json({ message: 'Post request received!' });
-   });
+// webserver.post('/api', (req, res) => {
+//    console.log(req.body);
+//    res.json({ message: 'Post request received!' });
+//    });
 
+webserver = require('./app');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
