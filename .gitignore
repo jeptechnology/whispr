@@ -90,13 +90,4 @@ typings/
 
 # Electron-Forge
 out/
-src/support_package/SupportPackage.txt
-src/support_package/log/wiser-home.1.txt
-src/support_package/log/wiser-home.2.txt
-src/support_package/log/wiser-home.3.txt
-src/support_package/log/wiser-home.4.txt
-src/support_package/log/wiser-home.5.txt
-src/support_package/log/wiser-home.6.txt
-src/support_package/log/wiser-home.7.txt
-src/support_package/log/wiser-home.8.txt
-src/support_package/log/wiser-home.txt
+src/support_package/

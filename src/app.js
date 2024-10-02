@@ -29,17 +29,42 @@ function decodeSupportPackageTxt()
    // Split the content into sections
    const sections = fileContent.split('----');
    
-   // Extract each section
-   const dbContents = sections[1].split('DB contents:')[1].trim();
-   const fileSystemContents = sections[2].split('Contents of file system:')[1].trim();
-   const resetReasons = sections[3].split('Reset Reasons:')[1].trim();
-   const journalLog = sections[4].split('Journal Log:')[1]?.trim() || '';
-   
-   // Write each section to a separate file
-   fs.writeFileSync(path.join(__dirname, path.join(supportPackagePath, 'DBContents.json')), dbContents);
-   fs.writeFileSync(path.join(__dirname, path.join(supportPackagePath, 'FileSystemContents.txt')), fileSystemContents);
-   fs.writeFileSync(path.join(__dirname, path.join(supportPackagePath, 'JournalLog.txt')), journalLog);
-   
+   const expectedSections = [
+      { name: 'DB contents:', destinaton: 'datamodel.json' },
+      { name: 'Contents of file system:', destinaton: 'FileSystemContents.txt' },
+      { name: 'Reset Reasons', destinaton: 'ResetReasons.txt' },
+      { name: 'Journal Log', destinaton: 'JournalLog.txt' }
+   ];
+
+   // For each section, identify what it is and then save it to a separate file
+   for (let i = 0; i < sections.length; i++)
+   {
+      const section = sections[i].trim();
+      // if this section contains one of our expected sections, save it to a file
+      for (let j = 0; j < expectedSections.length; j++)
+      {
+         const expectedSection = expectedSections[j];
+         if (section.includes(expectedSection.name))
+         {
+            console.log('Found section: ', expectedSection.name);
+            const sectionName = expectedSection.name;
+            const sectionContents = section.split(sectionName)[1].trim();
+
+            // If this is the DB contents section, save it as a JSON file in pretty format
+            if (sectionName === 'DB contents:')
+            {
+               const dbContents = JSON.parse(sectionContents);
+               const prettyDbContents = JSON.stringify(dbContents, null, 3);
+               fs.writeFileSync(path.join(supportPackagePath, expectedSection.destinaton), prettyDbContents);
+            }
+            else
+            {
+               fs.writeFileSync(path.join(supportPackagePath, expectedSection.destinaton), sectionContents);
+            }
+         }
+      }
+   }
+
    console.log('Sections have been successfully written to separate files.');
 }
 
