@@ -1,43 +1,38 @@
 {
   "name": "whispr",
-  "version": "1.0.1",
-  "description": "Wiser Home Integrated Support Package Reader",
-  "main": "main.js",
-  "build": {
-    "appId": "com.jeptechnology.whispr",
-    "productName": "WhispR",
-    "mac": {
-      "category": "public.app-category.lifestyle"
-    },
-    "dmg": {
-      "icon": false
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Office"
-    }
+  "productName": "whispr",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
   },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.5.0",
+    "@electron-forge/maker-deb": "^7.5.0",
+    "@electron-forge/maker-rpm": "^7.5.0",
+    "@electron-forge/maker-squirrel": "^7.5.0",
+    "@electron-forge/maker-zip": "^7.5.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
+    "@electron-forge/plugin-fuses": "^7.5.0",
+    "@electron/fuses": "^1.8.0",
+    "electron": "32.1.2"
+  },
+  "keywords": [],
+  "author": {
+    "name": "James Parker",
+    "email": "james@jeptechnology.com"
+  },
+  "license": "MIT",
   "dependencies": {
     "decompress": "^4.2.1",
     "decompress-targz": "^4.1.1",
-    "electron-squirrel-startup": "^1.0.1",
     "express": "^4.21.0",
-    "multer": "^1.4.5-lts.1"
-  },
-  "scripts:": {
-    "postinstall": "electron-builder install-app-deps",
-    "build": "electron-builder --mac --windows --linux",
-    "release": "electron-builder --mac --windows --linux --publish always"
-  },
-  "author": "James Parker",
-  "license": "MIT",
-  "devDependencies": {
-    "@electron/fuses": "^1.8.0",
-    "electron": "^32.1.2",
-    "electron-builder": "^25.0.5",
-    "electron-updater": "^6.3.4",
-    "rpmbuild": "^0.0.23"
+    "multer": "^1.4.5-lts.1",
+    "electron-squirrel-startup": "^1.0.1"
   }
 }
