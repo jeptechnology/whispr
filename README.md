@@ -1,6 +1,8 @@
-# WHISPR - Wiser Home Integrated Support Package Reader.
+# WHISPR 
 
-This repository contains a support package offline viewer for Wiser Home systems.
+## Wiser Home Integrated Support Package Reader.
+
+This repository contains an Electron app that allows offline viewing of WiserHome support package files.
 
 ## Overview
 
@@ -14,28 +16,18 @@ WHISPR allows users to view and manage their Wiser Home support packages offline
 
 ## Technologies Used
 
-- JavaScript
-- HTML
+- JavaScript/HTML/CSS
+- React
+- Express
+- Electron
 
 ## Installation
 
-To get started with WHISPR, follow the instructions below:
+To get started with WHISPR, [download a release](https://github.com/jeptechnology/whispr/releases)
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/jeptechnology/whispr.git
-   ```
+simply unzip the release and launch the whispr application.
 
-2. Navigate to the project directory:
-   ```sh
-   cd whispr
-   ```
-
-3. Open the `index.html` file in your browser to start using WHISPR.
-
-## Contributing
-
-We welcome contributions! Please read our [contributing guide](CONTRIBUTING.md) to get started.
+NOTE: This is not yet signed so you will have to allow it.
 
 ## License
 
