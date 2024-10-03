@@ -410,6 +410,8 @@ function decodeJournalLogEntry(file, line)
    // Oct 02 07:00:54 WiserHeat05C2D7 component[id]: message text
 
    timestamp = line.substring(0, 15);
+   // as the timestamp in Journal logs does not contain the timezone, we need to add it
+   timestamp += 'Z';
    // convert the timestamp to a unix timestamp
    date = new Date(timestamp);
    
