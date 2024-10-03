@@ -329,22 +329,22 @@ function decodeWiserHomeLogEntry(file, line)
       file: file,
       severity: "notice",
       component: "",
-      message: "",
+      message: line, // we should faithfully preserve the whole line here
    };
 
    timestamp = line.substring(1, line.indexOf(']'));
    // convert the timestamp to a unix timestamp
    entry.unixtimestamp = new Date(timestamp).getTime();      
-   entry.message = line.substring(line.indexOf(']') + 1).trim();
+   line = line.substring(line.indexOf(']') + 1).trim();
 
    // extract the component
-   const componentEnd = entry.message.indexOf(']');
-   entry.component = entry.message.substring(1, componentEnd).trim();
+   const componentEnd = line.indexOf(']');
+   entry.component = line.substring(1, componentEnd).trim();
 
    // extract the severity
-   const severityStart = entry.message.indexOf('[', componentEnd + 1);
-   const severityEnd = entry.message.indexOf(']', severityStart);
-   entry.severity = entry.message.substring(severityStart + 1, severityEnd).trim();
+   const severityStart = line.indexOf('[', componentEnd + 1);
+   const severityEnd = line.indexOf(']', severityStart);
+   entry.severity = line.substring(severityStart + 1, severityEnd).trim();
 
    return entry;
 }
@@ -357,7 +357,7 @@ function decodeJournalLogEntry(file, line)
       file: file,
       severity: "notice",
       component: "",
-      message: "",
+      message: line, // we should faithfully preserve the whole line here
    };
 
    // This is a journal log entry of the form:
@@ -379,14 +379,14 @@ function decodeJournalLogEntry(file, line)
    }
 
    entry.unixtimestamp = date.getTime();
-   entry.message = line.substring(16).trim();
+   line = line.substring(16).trim();
 
    // remove the prefix of the form WiserHeat05C2D7
-   entry.message = entry.message.substring(entry.message.indexOf(' ')).trim();
+   line = line.substring(line.indexOf(' ')).trim();
 
    // extract the component
-   const componentEnd = entry.message.indexOf(':');
-   entry.component = entry.message.substring(0, componentEnd);
+   const componentEnd = line.indexOf(':');
+   entry.component = line.substring(0, componentEnd);
 
    // Cannot extract the severity, so just leave it at "notice"
 
@@ -421,7 +421,8 @@ function createLogEntryFromLine(default_timestamp, file, line)
 async function processFile(filename)
 {
    const file = await open(filename);
-   const shortFilename = path.basename(filename);
+   // The shortFilename should be the name of the file without the path or the suffix
+   const shortFilename = path.basename(filename, '.log');
    let default_timestamp = 0;
    for await (const line of file.readLines()) 
    {
