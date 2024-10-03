@@ -75,40 +75,65 @@ webserver.listen(port, () => {
    });
 
 // Define the API routes
-// GET /api/log?component=component&severity=severity&file=file
+// GET /api/log?component=component&severity=severity&file=file?start=start&end=end
 webserver.get('/api/log', (req, res) => {
+   
+   // Gather the query parameters here...
    const component = req.query.component;
    const severity = req.query.severity;
    const file = req.query.file;
-      
+   const start = req.query.start;
+   const end = req.query.end;
+
    // create a set of all possible indeces in the log map - this will be 0..n-1 where n is the number of log entries
    let log_indeces = new Set();
-   for (let i = 0; i < global.log_structure.entries.length; i++)
-   {
-      log_indeces.add(i);
-   }
+   for (let i = 0; i < global.log_structure.entries.length; i++) log_indeces.add(i);
 
    // if a component is specified, filter the log_indeces to only those that match the component
-   if (component !== undefined && global.log_structure.components[component] !== undefined)
+   if (component)
    {
+      if (global.log_structure.components[component] === undefined)
+      {
+         res.status(400).json({ message: 'Component not found' });
+         return;
+      }
       log_indeces = log_indeces.intersection(global.log_structure.components[component]);
    }
 
    // if a severity is specified, filter the log_indeces to only those that match the severity
-   if (severity !== undefined && global.log_structure.severity[severity] !== undefined)
+   if (severity)
    {
+      if (global.log_structure.severity[severity] === undefined)
+      {
+         res.status(400).json({ message: 'Severity not found' });
+         return;
+      }
       log_indeces = log_indeces.intersection(global.log_structure.severity[severity]);
    }
 
    // if a file is specified, filter the log_indeces to only those that match the file
-   if (file !== undefined && global.log_structure.files[file] !== undefined)
+   if (file)
    {
+      if (global.log_structure.files[file] === undefined)
+      {
+         res.status(400).json({ message: 'File not found' });
+         return;
+      }
       log_indeces = log_indeces.intersection(global.log_structure.files[file]);
    }
 
-   // create a string of all log entries that match the filter
+   // create a string of all log entries that match the filter and are between the start and end times (if supplied)
    logText = '';
    log_indeces.forEach((index) => {
+      // check we are beyond start and before end
+      if (start && global.log_structure.entries[index].unixtimestamp < start)
+      {
+         return;
+      }
+      if (end && global.log_structure.entries[index].unixtimestamp > end)
+      {
+         return;
+      }
       logText += global.log_structure.entries[index].message + '\n';
    });
 
