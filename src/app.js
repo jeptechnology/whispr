@@ -193,10 +193,22 @@ webserver.get('/api/log', (req, res) => {
 
    });
 
-webserver.post('/api', (req, res) => {
-   console.log(req.body);
-   res.json({ message: 'Post request received!' });
+// GET /api/log/structure
+// This will produce a list of files and components that have been found in the logs
+webserver.get('/api/structure', (req, res) => {
+
+   // we need to search the support_package directory for all log files
+   const supportPackagePath = path.join(__dirname, 'support_package');
+   // find all files but filter out directories
+   const allFiles = fs.readdirSync(supportPackagePath).filter(fn => fs.lstatSync(path.join(supportPackagePath, fn)).isFile());
+
+   res.json({ 
+      components: Object.keys(global.log_structure.components), 
+      severity: Object.keys(global.log_structure.severity), 
+      logs: Object.keys(global.log_structure.files),
+      files: allFiles
    });
+});
 
 function decodeSupportPackageTxt()
 {
@@ -387,6 +399,12 @@ function decodeJournalLogEntry(file, line)
    // extract the component
    const componentEnd = line.indexOf(':');
    entry.component = line.substring(0, componentEnd);
+   // Note: Journal components sometimes have a suffix of [id] which we should remove
+   const idStart = entry.component.indexOf('[');
+   if (idStart !== -1)
+   {
+      entry.component = entry.component.substring(0, idStart).trim();
+   }
 
    // Cannot extract the severity, so just leave it at "notice"
 
