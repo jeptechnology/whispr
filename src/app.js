@@ -17,6 +17,9 @@ const upload = multer({ dest: path.join(__dirname,'uploads') });
 const decompress = require('decompress');
 const decompressTargz = require('decompress-targz');
 
+// import the severity module - for mapping between syslog severity levels and their corresponding numeric values
+const severityAPI = require('./severity');
+
 // The following global variables are used to store all logs in a searchable format
 // They allow us to search for logs by component, severity, and file and produce results to api calls quickly
 global.log_structure = {
@@ -78,9 +81,9 @@ webserver.listen(port, () => {
 function validateQueryParams(req)
 {
    // Gather the query parameters here...
-   const component = req.query.component;
-   const severity = req.query.severity;
    const file = req.query.file;
+   const component = req.query.component;
+   let severity = req.query.severity;
    let start = req.query.start;
    let end = req.query.end;
 
@@ -114,9 +117,15 @@ function validateQueryParams(req)
    // if a severity is specified, check if it exists
    if (severity)
    {
-      if (global.log_structure.severity[severity] === undefined)
+      // if severity is not a number, then we need to convert it to a number
+      if (isNaN(severity))
       {
-         return { status: 400, message: 'Severity not found' };
+         severity = severityAPI.getSeverityValue(severity);
+      }
+
+      if (severity === null)
+      {
+         return { status: 400, message: 'Invalid severity: ' + severity };
       }
    }
 
@@ -144,9 +153,9 @@ webserver.get('/api/log', (req, res) => {
       return;
    }
 
-   const component = req.query.component;
-   const severity = req.query.severity;
    const file = req.query.file;
+   const component = req.query.component;
+   let severity = req.query.severity;
    let start = req.query.start;
    let end = req.query.end;
 
@@ -165,13 +174,38 @@ webserver.get('/api/log', (req, res) => {
 
    if (severity)
    {
-      log_indeces = log_indeces.intersection(global.log_structure.severity[severity]);
+      // if severity is not a number, then we need to convert it to a number
+      if (isNaN(severity))
+      {
+         severity = severityAPI.getSeverityValue(severity);
+      }
+
+      if (severity === null)
+      {
+         res.status(400).json({ message: 'Invalid severity: ' + severity });
+         return;
+      }
+
+      severitySet = new Set();
+      // Make a union of all entries that are the given severity or higher (i.e. as least as severe as the given severity)
+      for (let i = severity; i <= severityAPI.highestSeverity; i++)
+      {
+         if (global.log_structure.severity[i] !== undefined)
+         {
+            severitySet = severitySet.union(global.log_structure.severity[i]);
+         }
+      }
+
+      log_indeces = log_indeces.intersection(severitySet);
    }
 
    if (file)
    {
       log_indeces = log_indeces.intersection(global.log_structure.files[file]);
    }
+
+   // before we generate the filtered log, we need to sort the log_indeces
+   log_indeces = Array.from(log_indeces).sort();
 
    // create a string of all log entries that match the filter and are between the start and end times (if supplied)
    logText = '';
@@ -339,7 +373,7 @@ function decodeWiserHomeLogEntry(file, line)
    let entry = { 
       unixtimestamp: 0,
       file: file,
-      severity: "notice",
+      severity: severityAPI.getSeverityDefaultValue(),
       component: "",
       message: line, // we should faithfully preserve the whole line here
    };
@@ -356,7 +390,7 @@ function decodeWiserHomeLogEntry(file, line)
    // extract the severity
    const severityStart = line.indexOf('[', componentEnd + 1);
    const severityEnd = line.indexOf(']', severityStart);
-   entry.severity = line.substring(severityStart + 1, severityEnd).trim();
+   entry.severity = severityAPI.getSeverityValueOrDefault(line.substring(severityStart + 1, severityEnd).trim());
 
    return entry;
 }
@@ -367,7 +401,7 @@ function decodeJournalLogEntry(file, line)
    let entry = { 
       unixtimestamp: 0,
       file: file,
-      severity: "notice",
+      severity: severityAPI.getSeverityDefaultValue(),
       component: "",
       message: line, // we should faithfully preserve the whole line here
    };
@@ -430,7 +464,7 @@ function createLogEntryFromLine(default_timestamp, file, line)
    return {
       unixtimestamp: default_timestamp,
       file: file,
-      severity: "notice",
+      severity: severityAPI.getSeverityDefaultValue(),
       component: "unknown",
       message: line,
    };
