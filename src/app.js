@@ -17,9 +17,18 @@ const upload = multer({ dest: path.join(__dirname,'uploads') });
 const decompress = require('decompress');
 const decompressTargz = require('decompress-targz');
 
+// The following global variables are used to store all logs in a searchable format
+// They allow us to search for logs by component, severity, and file and produce results to api calls quickly
 global.log_structure = {
-   entries : [],  // all log entries as object: { unixtimestamp, log_file, severity, log_entry }
-   map : {}       // a sorted map from { unixtimestamp, index_in_all_log_entries }
+   // All log entries as objects: { unixtimestamp, log_file, severity, log_entry }
+   // These will be sorted by timestamp - which is stored in milliseconds since epoch
+   entries : [],
+   // All discovered log components as a Map of component -> Set of log entry indeces
+   components : {}, 
+   // All discovered log severities as a Map of severity -> Set of log entry indeces
+   severity : {},
+   // All discovered log files as a Map of file -> Set of log entry indeces
+   files : {},
 };
 
 webserver.use(express.json());
@@ -65,8 +74,47 @@ webserver.listen(port, () => {
    console.log(`Server is running on port ${port}`);
    });
 
-webserver.get('/api', (req, res) => {
-   res.json({ message: 'Hello, world!' });
+// Define the API routes
+// GET /api/log?component=component&severity=severity&file=file
+webserver.get('/api/log', (req, res) => {
+   const component = req.query.component;
+   const severity = req.query.severity;
+   const file = req.query.file;
+      
+   // create a set of all possible indeces in the log map - this will be 0..n-1 where n is the number of log entries
+   let log_indeces = new Set();
+   for (let i = 0; i < global.log_structure.entries.length; i++)
+   {
+      log_indeces.add(i);
+   }
+
+   // if a component is specified, filter the log_indeces to only those that match the component
+   if (component !== undefined && global.log_structure.components[component] !== undefined)
+   {
+      log_indeces = log_indeces.intersection(global.log_structure.components[component]);
+   }
+
+   // if a severity is specified, filter the log_indeces to only those that match the severity
+   if (severity !== undefined && global.log_structure.severity[severity] !== undefined)
+   {
+      log_indeces = log_indeces.intersection(global.log_structure.severity[severity]);
+   }
+
+   // if a file is specified, filter the log_indeces to only those that match the file
+   if (file !== undefined && global.log_structure.files[file] !== undefined)
+   {
+      log_indeces = log_indeces.intersection(global.log_structure.files[file]);
+   }
+
+   // create a string of all log entries that match the filter
+   logText = '';
+   log_indeces.forEach((index) => {
+      logText += global.log_structure.entries[index].message + '\n';
+   });
+
+   res.status(200).type('text/plain');
+   res.send(logText);
+
    });
 
 webserver.post('/api', (req, res) => {
@@ -198,7 +246,8 @@ function concatenateWiserHomeLogs()
 
 function decodeWiserHomeLogEntry(file, line)
 {
-   // Extract the timestamp
+   // [2024-07-16 20:44:38.339] [zigbee    ] [notice    ] Some message text
+
    let entry = { 
       unixtimestamp: 0,
       file: file,
@@ -210,15 +259,16 @@ function decodeWiserHomeLogEntry(file, line)
    timestamp = line.substring(1, line.indexOf(']'));
    // convert the timestamp to a unix timestamp
    entry.unixtimestamp = new Date(timestamp).getTime();      
-   entry.message = line.substring(1).trim();
+   entry.message = line.substring(line.indexOf(']') + 1).trim();
 
    // extract the component
    const componentEnd = entry.message.indexOf(']');
-   entry.component = entry.message.substring(1, componentEnd);
+   entry.component = entry.message.substring(1, componentEnd).trim();
 
    // extract the severity
-   const severityEnd = entry.message.indexOf(']', componentEnd + 1);
-   entry.severity = entry.message.substring(componentEnd + 2, severityEnd).trim();
+   const severityStart = entry.message.indexOf('[', componentEnd + 1);
+   const severityEnd = entry.message.indexOf(']', severityStart);
+   entry.severity = entry.message.substring(severityStart + 1, severityEnd).trim();
 
    return entry;
 }
@@ -239,22 +289,35 @@ function decodeJournalLogEntry(file, line)
 
    timestamp = line.substring(0, 15);
    // convert the timestamp to a unix timestamp
-   entry.unixtimestamp = new Date(timestamp).getTime();
+   date = new Date(timestamp);
+   
+   // if the year is more than 1 years old, then its likely we failed to parse the correct year.
+   // In that case, we should use the current year as the year, unless this would put us in the future, in which case we should use the previous year
+   if (date.getFullYear() < new Date().getFullYear() - 1)
+   {
+      date.setFullYear(new Date().getFullYear());
+      if (date > new Date())
+      {
+         date.setFullYear(new Date().getFullYear() - 1);
+      }
+   }
+
+   entry.unixtimestamp = date.getTime();
    entry.message = line.substring(16).trim();
 
    // remove the prefix of the form WiserHeat05C2D7
    entry.message = entry.message.substring(entry.message.indexOf(' ')).trim();
 
    // extract the component
-   const componentEnd = entry.message.indexOf(']');
-   entry.component = entry.message.substring(1, componentEnd);
+   const componentEnd = entry.message.indexOf(':');
+   entry.component = entry.message.substring(0, componentEnd);
 
    // Cannot extract the severity, so just leave it at "notice"
 
    return entry;   
 }
 
-function createLogEntryFromLine(file, line)
+function createLogEntryFromLine(default_timestamp, file, line)
 {
    // If the very first characeter This is a wiser-home log entry of the form:
    // [2024-07-16 20:44:38.339] [zigbee    ] [notice    ] Some message text
@@ -269,15 +332,21 @@ function createLogEntryFromLine(file, line)
       return decodeJournalLogEntry(file, line);
    }
 
-   // TODO: This is a new style log entry
-   console.log('New style log entry: ', line);
-   return null;
+   // TODO: This is a new style log entry   
+   return {
+      unixtimestamp: default_timestamp,
+      file: file,
+      severity: "notice",
+      component: "unknown",
+      message: line,
+   };
 }
 
 async function processFile(filename)
 {
    const file = await open(filename);
    const shortFilename = path.basename(filename);
+   let default_timestamp = 0;
    for await (const line of file.readLines()) 
    {
       // if line is null or empty, skip it
@@ -286,10 +355,13 @@ async function processFile(filename)
          continue;
       }
 
-      entry = createLogEntryFromLine(shortFilename, line);
+      entry = createLogEntryFromLine(default_timestamp, shortFilename, line);
       if (entry !== null)
       {
-         global.log_structure.entries.push(entry);         
+         global.log_structure.entries.push(entry);
+         // set the default timestamp to the last entry
+         // if the next entry cannot determine its timestamp, we will use this one
+         default_timestamp = entry.unixtimestamp; 
       }
    }
 
@@ -308,38 +380,40 @@ async function create_log_structure()
    }
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', global.log_structure.entries.length, ' entries');
-
+   // capture the time before and after the sort to see how long it takes
+   let start = new Date();
    // Sort the log entries by timestamp
    global.log_structure.entries.sort((a, b) => a.unixtimestamp - b.unixtimestamp);
 
-   console.log('Log entries have been sorted by timestamp');
+   let end = new Date();
+   console.log('Log entries have been sorted by timestamp. This took: ', end - start, ' milliseconds');
 
-   // Now generate the "global" log of everything...
-   const allLogs = path.join(__dirname, 'support_package', 'all-logs.txt');
-
-   // open file for writing...
-   lineCount = 0;
-   open(allLogs, 'w').then((file) => {
-      for (let i = 0; i < global.log_structure.entries.length; i++)
+   console.log('Creating searchable log maps...');
+   start = new Date();
+   // Create the component, severity, and file maps
+   for (let i = 0; i < global.log_structure.entries.length; i++)
+   {
+      const entry = global.log_structure.entries[i];
+      if (global.log_structure.components[entry.component] === undefined)
       {
-         const entry = global.log_structure.entries[i];
-         const timestamp = new Date(entry.unixtimestamp).toISOString();
-         const line = '[' + timestamp + '] [' + entry.component + '] [' + entry.severity + '] ' + entry.message + '\n';
-         file.write(line);
-
-         lineCount++;
-
-         // if line count is multiple of 1000, log progress
-         if (lineCount % 1000 === 0)
-         {
-            console.log('Processed ', lineCount, ' log entries');
-         }
+         global.log_structure.components[entry.component] = new Set();
       }
-            
-      file.close();
+      global.log_structure.components[entry.component].add(i);
 
-      console.log('All log entries have been written to all-logs.txt');
-   });
+      if (global.log_structure.severity[entry.severity] === undefined)
+      {
+         global.log_structure.severity[entry.severity] = new Set();
+      }
+      global.log_structure.severity[entry.severity].add(i);
+
+      if (global.log_structure.files[entry.file] === undefined)
+      {
+         global.log_structure.files[entry.file] = new Set();
+      }
+      global.log_structure.files[entry.file].add(i);
+   }   
+   end = new Date();
+   console.log('Searchable log maps have been created. This took: ', end - start, ' milliseconds');
 }
 
 
