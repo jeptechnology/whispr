@@ -3,6 +3,6 @@ syntax = "proto3";
 message LogEntry 
 {
    string source = 1;
-   int64 time_nano = 2;
+   uint64 time_nano = 2;
    string line = 3;
 }
