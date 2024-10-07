@@ -50,8 +50,8 @@ function DecodeLocalLogs(source_file, destination_file) {
       const timestamp = message.timeNano;
       const date = new Date(timestamp / 1000000);
 
-      // write the log line to the output file
-      output.write(date.toISOString() + " " + message.line + "\n");
+      // write the log line to the output file - using UTC time
+      output.write("[" + date.toISOString() + "] " + message.line + "\n");
    }
 }
 

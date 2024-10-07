@@ -1,17 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Whispr</title>
-</head>
-<body>
-   <h1>Upload a File</h1>
-   <form action="/upload" method="post" enctype="multipart/form-data">
-      <label for="file">Choose file to upload:</label>
-      <input type="file" name="support_package" />
-      <br><br>
-      <button type="submit">Upload</button>
-    </form>
-</body>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <title>WhispR</title>
+  </head>
+  <body>
+    <button id="btn" type="button">Open Support Package...</button>
+    <script src="./renderer.js"></script>
+  </body>
 </html>

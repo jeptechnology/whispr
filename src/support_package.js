@@ -110,6 +110,12 @@ function DecodeSupportPackageTxt(inputFilePath, destinationFolder)
             console.log('Found section: ', expectedSection.name);
             const sectionName = expectedSection.name;
             const sectionContents = section.split(sectionName)[1].trim();
+            const destinaton = path.join(destinationFolder, expectedSection.destinaton);
+            // make sure the folder exists
+            if (!fs.existsSync(path.dirname(destinaton)))
+            {
+               fs.mkdirSync(path.dirname(destinaton), { recursive: true });
+            }
 
             // If this is the DB contents section, save it as a JSON file in pretty format
             if (sectionName === 'DB contents:')
@@ -461,14 +467,14 @@ async function CreateLogDB(destinationFolder)
 // @param destination_dir - the full path to the destination directory where the decompressed files will be stored
 async function PostProcessSupportPackage(source_file, destination_dir)
 {
-   // first of all clear the destination directory
-   if (fs.existsSync(destination_dir))
-   {
-      fs.rmSync(destination_dir, { recursive: true });
-   }
-
    try 
    {
+      // first of all clear the destination directory
+      if (fs.existsSync(destination_dir))
+      {
+         fs.rmSync(destination_dir, { recursive: true });
+      }
+   
       await DecompressSupportPackage(source_file, destination_dir);
       
       console.log('Support package has been decompressed, attempting to process it');
@@ -483,6 +489,9 @@ async function PostProcessSupportPackage(source_file, destination_dir)
    
       console.log('Attempting to create a log structure from the logs');
       CreateLogDB(destination_dir);
+
+      // remove the log folder
+      fs.rmSync(path.join(destination_dir, 'log'), { recursive: true });
    }
    catch (err)
    {

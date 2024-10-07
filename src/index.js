@@ -1,11 +1,32 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain, ipcRenderer, dialog } = require("electron");
 const path = require("node:path");
 
 webserver = require("./app");
+supportPackage = require("./support_package");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
   app.quit();
+}
+
+function handleChooseSupportPackage (event) {
+  dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [{ name: "Support Packages", extensions: ["tgz"] }],
+  })
+  .then((result) => {
+    if (result.canceled) {
+      return;
+    }
+    // get filename
+    const sourcefile = result.filePaths[0];
+    // the destination directory should be the same as the source file but without the extension
+    const destination = sourcefile.replace(/\.tgz$/, "");
+    supportPackage.PostProcessSupportPackage(sourcefile, destination)
+  })
+  .catch((err) => {
+      console.log(err);
+  });      
 }
 
 const createWindow = () => {
@@ -22,18 +43,20 @@ const createWindow = () => {
   });
 
   // and load the index.html from the express webserver
-  mainWindow.loadURL("http://localhost:3000/");
-  // mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  // mainWindow.loadURL("http://localhost:3000/");
+  mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
   mainWindow.focus();
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
+  ipcMain.on('support-package-chose', handleChooseSupportPackage)
+  
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the
@@ -56,7 +79,6 @@ app.on("window-all-closed", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
-
 
 // This is the main entry point for the application
 
