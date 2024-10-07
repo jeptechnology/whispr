@@ -1,0 +1,320 @@
+Support Package for WiserHeat
+
+----
+
+Contents of /status/
+{"uptime":14924271,"freeHeap":48816,"lowestFreeHeap":4824,"lastResetReason":"GENERAL_RST","taskUsageEnabled":false}
+
+----
+
+Contents of /factory/
+{}
+
+----
+
+Contents of /domain/
+{"System":{"PairingStatus":"Paired","provisionTokenFailCount":116,"provisionTokenRequestCount":116,"TimeZoneOffset":0,"AutomaticDaylightSaving":true,"SystemMode":"Heat","Version":6,"FotaEnabled":false,"ValveProtectionEnabled":false,"EcoModeEnabled":true,"AwayModeAffectsHotWater":true,"AwayModeSetPointLimit":100,"BoilerSettings":{"ControlType":"HeatSourceType_RelayControlled","FuelType":"Gas","CycleRate":"CPH_6","OnOffHysteresis":5},"CoolingModeDefaultSetpoint":210,"CoolingAwayModeSetpointLimit":-200,"ComfortModeEnabled":true,"PreheatTimeLimit":10800,"DegradedModeSetpointThreshold":180,"GeoPosition":{"Latitude":50.3561,"Longitude":-4.08705},"UfhOrphanModeOutput":"On","isMigrated":true,"UnixTime":1727861820,"ActiveSystemVersion":"3.12.1-9d8272a087","BrandName":"WiserHeat","CloudConnectionStatus":"Connected","ChipId":"0xa1120e00","LocalDateAndTime":{"Year":2024,"Month":"October","Date":2,"Day":"Wednesday","Time":1037},"HeatingButtonOverrideState":"Off","HotWaterButtonOverrideState":"Off","OpenThermConnectionStatus":"Disconnected","SunriseTimes":[710,711,713,714,716,717,719,720,722,724,725,727,728],"SunsetTimes":[1904,1902,1900,1858,1855,1853,1851,1849,1847,1845,1842,1840,1838],"isTrialist":false,"isProvisioned":true,"HardwareGeneration":1},"Cloud":{"DetailedPublishing":false,"WiserApiHost":"api-nl.wiserair.com","BootStrapApiHost":"bootstrap.gl.struxurewarecloud.com"},"HeatingChannel":[{"id":1,"Name":"Channel-1","RoomIds":[1],"PercentageDemand":0,"DemandOnOffOutput":"Off","HeatingRelayState":"Off","IsSmartValvePreventingDemand":true}],"HotWater":[{"id":2,"ScheduleId":1000,"Mode":"Manual","WaterHeatingState":"Off","ScheduledWaterHeatingState":"Off","HotWaterRelayState":"Off","HotWaterDescription":"FromManualMode"}],"Room":[{"id":1,"ScheduleId":1,"ComfortModeScore":737,"HeatingRate":2485,"RoomStatId":1,"UfhRelayIds":[],"Name":"Heating","Mode":"Auto","DemandType":"Modulating","WindowDetectionActive":false,"CalculatedTemperature":192,"CurrentSetPoint":180,"PercentageDemand":0,"ControlOutputState":"Off","SetpointOrigin":"FromSchedule","DisplayedSetPoint":180,"ScheduledSetPoint":180,"AwayModeSuppressed":false,"RoundedAlexaTemperature":190,"EffectiveMode":"Auto","PercentageDemandForItrv":0,"ControlDirection":"Heat","HeatingType":"HydronicRadiator"}],"Device":[{"id":0,"NodeId":0,"ProductType":"Controller","ProductIdentifier":"Controller","ActiveFirmwareVersion":"3.12.1","ModelIdentifier":"WT724R1S0902","DeviceLockEnabled":false,"DisplayedSignalStrength":"Medium","ReceptionOfController":{"Rssi":-73},"ReceptionOfDevice":{"Rssi":0,"Lqi":255},"BindingsStatus":"Unchecked","ReportConfigStatus":"Unchecked"},{"id":1,"NodeId":36151,"ProductType":"RoomStat","ProductIdentifier":"RoomStat","ActiveFirmwareVersion":"0000a412","ModelIdentifier":"Thermostat","SerialNumber":"086BD7FFFEF55DA2","ProductModel":"Thermostat","OtaImageQueryCount":0,"LastOtaImageQueryCount":0,"ParentNodeId":0,"OtaVersion":42002,"OtaHardwareVersion":1,"DeviceLockEnabled":false,"DisplayedSignalStrength":"Good","BatteryVoltage":31,"BatteryLevel":"Normal","ReceptionOfController":{"Rssi":-62,"Lqi":152},"ReceptionOfDevice":{"Rssi":-58,"Lqi":168},"BindingsStatus":"SetCorrectly","ReportConfigStatus":"SetCorrectly"}],"Zigbee":{"JPANCount":3160,"NetworkChannel":25,"NoSignalReset":3159,"UpdateEBLState":"Successful","CurrentEBLFile":"CICIE-1.2.0-3d1043a1.ebl","TargetEBLFile":"CICIE-1.2.0-3d1043a1.ebl","UpdateAttempts":2,"ZigbeeModuleVersion":"1.2.0-3d1043a1","ZigbeeEUI":"90FD9FFFFE5196D2"},"UpgradeInfo":[{"id":5,"FirmwareFilename":"105E-0A00-00007D02-0000-0000.zigbee"},{"id":6,"FirmwareFilename":"105E-000B-020A01FF-0100-02FF.zigbee"},{"id":8,"FirmwareFilename":"105E-0010-020A00FF-0000-01FF.zigbee"},{"id":10,"FirmwareFilename":"105E-0012-020A00FF-0000-01FF.zigbee"},{"id":12,"FirmwareFilename":"120B-210B-00000022-0000-FFFF.zigbee"}],"RoomStat":[{"id":1,"SetPoint":180,"MeasuredTemperature":192,"MeasuredHumidity":68}],"DeviceCapabilityMatrix":{"Roomstat":true,"ITRV":true,"SmartPlug":true,"UFH":true,"UFHFloorTempSensor":true,"UFHDewSensor":true,"HACT":false,"LACT":false,"Light":false,"Shutter":false,"LoadController":true},"Schedule":[{"id":1,"Monday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":180},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Tuesday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":180},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Wednesday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":180},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Thursday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":180},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Friday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":180},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Saturday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":180},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Sunday":{"SetPoints":[{"Time":800,"DegreesC":190},{"Time":900,"DegreesC":200},{"Time":1600,"DegreesC":200},{"Time":2200,"DegreesC":-200}]},"Type":"Heating"},{"id":1000,"Monday":{"SetPoints":[{"Time":630,"DegreesC":1100},{"Time":830,"DegreesC":-200},{"Time":1630,"DegreesC":1100},{"Time":2230,"DegreesC":-200}]},"Tuesday":{"SetPoints":[{"Time":630,"DegreesC":1100},{"Time":830,"DegreesC":-200},{"Time":1630,"DegreesC":1100},{"Time":2230,"DegreesC":-200}]},"Wednesday":{"SetPoints":[{"Time":630,"DegreesC":1100},{"Time":830,"DegreesC":-200},{"Time":1630,"DegreesC":1100},{"Time":2230,"DegreesC":-200}]},"Thursday":{"SetPoints":[{"Time":630,"DegreesC":1100},{"Time":830,"DegreesC":-200},{"Time":1630,"DegreesC":1100},{"Time":2230,"DegreesC":-200}]},"Friday":{"SetPoints":[{"Time":630,"DegreesC":1100},{"Time":830,"DegreesC":-200},{"Time":1630,"DegreesC":1100},{"Time":2230,"DegreesC":-200}]},"Saturday":{"SetPoints":[{"Time":700,"DegreesC":1100},{"Time":900,"DegreesC":-200},{"Time":1600,"DegreesC":1100},{"Time":2300,"DegreesC":-200}]},"Sunday":{"SetPoints":[{"Time":700,"DegreesC":1100},{"Time":900,"DegreesC":-200},{"Time":1600,"DegreesC":1100},{"Time":2300,"DegreesC":-200}]},"Type":"HotWater"}]}
+
+----
+
+Contents of /schedules/
+{"Heating":[{"id":1,"Name":"Heating","Monday":{"Time":[800,900,1600,2200],"DegreesC":[190,180,200,-200]},"Tuesday":{"Time":[800,900,1600,2200],"DegreesC":[190,180,200,-200]},"Wednesday":{"Time":[800,900,1600,2200],"DegreesC":[190,180,200,-200]},"Thursday":{"Time":[800,900,1600,2200],"DegreesC":[190,180,200,-200]},"Friday":{"Time":[800,900,1600,2200],"DegreesC":[190,180,200,-200]},"Saturday":{"Time":[800,900,1600,2200],"DegreesC":[190,180,200,-200]},"Sunday":{"Time":[800,900,1600,2200],"DegreesC":[190,200,200,-200]},"CurrentSetpoint":180,"Next":{"Day":"Wednesday","Time":1600,"DegreesC":200}}],"OnOff":[{"id":1000,"Name":"Hot Water","Monday":[630,-830,1630,-2230],"Tuesday":[630,-830,1630,-2230],"Wednesday":[630,-830,1630,-2230],"Thursday":[630,-830,1630,-2230],"Friday":[630,-830,1630,-2230],"Saturday":[700,-900,1600,-2300],"Sunday":[700,-900,1600,-2300],"CurrentState":"Off","Next":{"Day":"Wednesday","Time":1630,"State":"On"}}]}
+
+----
+
+Contents of /network/
+{"AccessPoint":{"Enabled":false,"Channel":1,"SecurityMode":"Open","MacAddress":"FCFEC202AAB6","NetworkInterface":{"InterfaceName":"wlan1","HostName":"WiserHeat02AAB6","DhcpMode":"Server","IPv4HostAddress":"192.168.8.1","IPv4SubnetMask":"255.255.255.0","IPv4DefaultGateway":"0.0.0.0","IPv4PrimaryDNS":"192.168.8.1","IPv4SecondaryDNS":"0.0.0.0"}},"Station":{"Enabled":true,"SSID":"TheParkerFamily","SecurityMode":"WPA_WPA2_PSK","ScanSlotTime":20,"ScanSlots":2,"NetworkInterface":{"InterfaceName":"wlan0","HostName":"WiserHeat02AAB6","DhcpMode":"Client"},"ConnectionStatus":"Connected","DhcpStatus":{"Status":"BOUND","LeaseStartTime":2038655133,"LeaseTime":7200,"IPv4Address":"192.168.1.109","IPv4SubnetMask":"255.255.255.0","IPv4DefaultGateway":"192.168.1.1","IPv4PrimaryDNS":"192.168.1.1","IPv4SecondaryDNS":"192.168.1.1"},"Scanning":false,"DetectedAccessPoints":[{"SSID":"TheParkerFamily","Channel":1,"SecurityMode":"WPA_WPA2_PSK","RSSI":-55}],"ConnectionFailures":0,"MdnsHostname":"WiserHeat02AAB6","MacAddress":"FCFEC202AAB6","RSSI":{"Current":-73,"Min":-86,"Max":-41},"Channel":1},"HealthCheckStats":{"IPv4AddressPing":"1.1.1.1","HealthCheckingEnabled":true,"ExternalPingEnabled":true,"InternalPingEnabled":true,"DnsResolutionEnabled":true,"RecoveryActions":1,"ExternalPing_Count":983162,"ExternalPingFailed_Count":2231,"InternalPing_Count":984901,"InternalPingFailed_Count":414,"DnsResolutionTest_Count":984749,"DnsResolutionTestFailed_Count":644,"ReconnectionFix_Count":50,"HealthCheckWifiRecovery_Count":22,"HealthCheckStackRecovery_Count":17,"WifiTotalUptime":12579554,"WifiLastUptime":6,"WifiTotalDowntime":103,"WifiLastDowntime":5,"WifiChannelChanges":4,"WifiStateNoError_Count":151,"WifiStateApNotFound_Count":3,"WifiStateAuthFail_Count":24,"WifiStateAssocFail_Count":2,"WifiStateLinkLoss_Count":11,"StationConnected_Count":88083,"CloudConnectionDrop_Count":494,"StationTransitionToConnected_Count":80,"StationTransitionToDisconnected_Count":36},"TcpStats_SinceBoot":{"TimeLastUpdated":1727861760,"SegmentsSent_Count":433916,"SegmentRetransmissions_Count":1278,"SocketTimeouts_Count":0,"StackRespawns_Count":5}}
+
+----
+
+Contents of /rus/
+{"swMatrix":{"systemType":"WiserHeat","partnerId":"1","repositoryProtocol":"HTTP","repositoryHost":"wiserheat-pkgs.se-ssl-cloud.com","repositoryPort":80,"systemRelease":[{"systemVersion":"3.12.1","deviceType":[{"deviceTypeId":"HeatHub","swComponent":[{"swComponentType":"zip","swComponentVersion":"3.12.1","repositoryPath":"/Final/Hub/3.12.1/","repositoryFile":"WHC_3.12.1-9d827.zip"}]},{"deviceTypeId":"105E-0E00-0000-00FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"1.8.0","repositoryPath":"/Final/16A/1.8.0/","repositoryFile":"105E-0E00-01080000-0000-00FF.zigbee"}]},{"deviceTypeId":"02010000","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"0.60.0","repositoryPath":"/Final/iTRV/0.60.0/","repositoryFile":"105E-0201-0000EA60-0000-0000.zigbee"}]},{"deviceTypeId":"04E101FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"0.60.3","repositoryPath":"/Final/RTR2/0.60.3/","repositoryFile":"105E-04E1-0000EA63-0100-01FF.zigbee"}]},{"deviceTypeId":"05E10200","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"0.0.24","repositoryPath":"/Final/SEFF/0.0.24/","repositoryFile":"105E-05E1-00000018-0000-0200.zigbee"}]},{"deviceTypeId":"0A000000","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"0.32.2","repositoryPath":"/Final/UFH/0.32.2/","repositoryFile":"105E-0A00-00007D02-0000-0000.zigbee"}]},{"deviceTypeId":"105E-000B-0100-02FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"2.10.1","repositoryPath":"/Final/Zigbee/2.10.1SIGN/","repositoryFile":"105E-000B-020A01FF-0100-02FF.zigbee"}]},{"deviceTypeId":"105E-000D-0000-01FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"2.12.1","repositoryPath":"/Final/Zigbee/2.12.1SIGN/","repositoryFile":"105E-000D-020C01FF-0000-01FF.zigbee"}]},{"deviceTypeId":"105E-0010-0000-01FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"2.10.0","repositoryPath":"/Final/Zigbee/2.10.0SIGN/","repositoryFile":"105E-0010-020A00FF-0000-01FF.zigbee"}]},{"deviceTypeId":"105E-0011-0000-02FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"2.11.15","repositoryPath":"/Final/Zigbee/2.11.15SIGN/","repositoryFile":"105E-0011-020B0FFF-0000-02FF.zigbee"}]},{"deviceTypeId":"105E-0012-0000-01FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"2.10.0","repositoryPath":"/Final/Zigbee/2.10.0SIGN/","repositoryFile":"105E-0012-020A00FF-0000-01FF.zigbee"}]},{"deviceTypeId":"105E-0013-0000-02FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"2.11.15","repositoryPath":"/Final/Zigbee/2.11.15SIGN/","repositoryFile":"105E-0013-020B0FFF-0000-02FF.zigbee"}]},{"deviceTypeId":"210B00FF","swComponent":[{"swComponentType":"zigbee","swComponentVersion":"0.0.34","repositoryPath":"/Final/SmartPlug/0.0.34/","repositoryFile":"120B-210B-00000022-0000-FFFF.zigbee"}]}]}]},"secondsToNextCall":3600}
+
+----
+
+Contents of /debug/
+{"LogsEnabled":{"cloud":false,"wifi":true,"warning":false}}
+
+----
+
+Contents of /reset/
+{"resets":[{"count":11,"lastTimestamp":1712937388},{"count":0,"lastTimestamp":0},{"count":34,"lastTimestamp":1709675530},{"count":13,"lastTimestamp":1699551980},{"count":1,"lastTimestamp":1668643849}],"messages":[{"timestamp":1709675530,"checksum":1919531643,"count":26},{"timestamp":1668643038,"checksum":7659225,"count":1},{"timestamp":1668643123,"checksum":3826154858,"count":1},{"timestamp":1668647050,"checksum":1105859359,"count":1},{"timestamp":1677760669,"checksum":1504988962,"count":2},{"timestamp":1671053212,"checksum":2432761038,"count":2},{"timestamp":1692028646,"checksum":2517692849,"count":1},{"timestamp":1693713475,"checksum":612553961,"count":1},{"timestamp":1694073495,"checksum":775921133,"count":1},{"timestamp":1694303912,"checksum":2609950166,"count":1},{"timestamp":1694563133,"checksum":2937014708,"count":1},{"timestamp":1694807918,"checksum":21706446,"count":1},{"timestamp":1704332959,"checksum":572102411,"count":2},{"timestamp":1695211182,"checksum":707743326,"count":1},{"timestamp":1695542400,"checksum":87323236,"count":1},{"timestamp":1695888023,"checksum":3495217653,"count":1}]}
+
+----
+
+Contents of /opentherm/
+{"chFlowActiveUpperSetpoint":800,"chFlowActiveLowerSetpoint":350,"dhwFlowSetpoint":400,"dhwEnable":false,"Enabled":true,"transmitter":{"messagesSentCount":26729617},"operatingMode":"NegotiatingOTplus","ch1FlowSetpoint":350,"ch1FlowEnable":false,"ch2FlowSetpoint":350,"ch2FlowEnable":false,"roomTemperature":192,"roomSetpoint":180,"TrackedRoomId":1}
+
+----
+
+Contents of /ocf/
+{"accountPairing":{"owner":"f43085b3-adb9-4b7a-996a-5aca41f7527f","site":"d8344218-2448-48e7-b206-ac3695e5622b"},"oic":{"mnt":{"wiserone_supportPackageUrl":"https://wisercloud-support-packages-prod.s3.eu-west-2.amazonaws.com/urn:dev:opm:SchneiderElectric-WiserHeat-FCFEC202AAB6/prodnl_wiserheat.20241002093716.tgz?X-Amz-Expires=3600&x-amz-meta-case-name=20241002093716&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA22GIUAAWAVSZLZ6H/20241002/eu-west-2/s3/aws4_request&X-Amz-Date=20241002T093716Z&X-Amz-SignedHeaders=host;x-amz-meta-case-name&X-Amz-Signature=d1d3dc9ddc2765f11da1a27f4710b6e1e2c64b6fdecf63e62020a32f65260a72","wiserone_supportPackageStatus":"InProgress"}}}
+
+----
+
+Contents of /migration/
+{"MigrationState":"FullyMigrated","Storage":"FileSystem","StorageState":"Invalid"}
+
+----
+
+Contents of file system:
+
+                             reboot_0.txt	    59
+                               debug.json	    59
+                              domain.json	  2566
+                           schedules.json	   789
+                                 ocf.json	   633
+                             reboot_3.txt	   204
+                           migration.json	   242
+                             reboot_6.txt	   106
+                     WHC_3.12.1-9d827.cms	  3898
+                           opentherm.json	   105
+                               reset.json	  1116
+                             reboot_4.txt	    96
+                             reboot_7.txt	   273
+                             reboot_8.txt	   272
+                             reboot_9.txt	   273
+                            reboot_10.txt	   273
+                            reboot_11.txt	   271
+                       SupportPackage.txt	 19204
+                            reboot_12.txt	   276
+                             reboot_1.txt	   159
+                                 rus.json	  2898
+                            reboot_13.txt	   275
+                             network.json	  1226
+                            reboot_14.txt	   273
+                             reboot_2.txt	   204
+                            reboot_15.txt	   275
+      105E-0A00-00007D02-0000-0000.zigbee	223170
+         105E-0A00-00007D02-0000-0000.cms	  3909
+      105E-000B-020A01FF-0100-02FF.zigbee	366475
+         105E-000B-020A01FF-0100-02FF.cms	  3910
+      105E-0010-020A00FF-0000-01FF.zigbee	340603
+         105E-0010-020A00FF-0000-01FF.cms	  3911
+      105E-0012-020A00FF-0000-01FF.zigbee	352711
+         105E-0012-020A00FF-0000-01FF.cms	  3910
+      120B-210B-00000022-0000-FFFF.zigbee	140606
+         120B-210B-00000022-0000-FFFF.cms	  3899
+                             reboot_5.txt	   182
+
+----
+
+Journal log:
+
+
+----
+
+Reset Reasons
+
+reboot_0.txt:
+
+Report:
+2024/04/12 15:56:28
+Version 3.12.1-9d8272a087
+
+
+reboot_1.txt:
+
+Report:
+2022/11/16 23:57:18
+Version 2.54.0-2401648bc2
+Reason:
+
+FOTA reboot
+Backtrace: 004a50a2 0043737c 00437872 00437972 004f8700 004f87ce 004f70ea 
+
+
+reboot_2.txt:
+
+Report:
+2022/11/16 23:58:43
+Version 2.54.0-2401648bc2
+Reason:
+
+FOTA reboot
+Backtrace: 0047fd46 00498092 00498bce 00498d88 004f10d4 004f11a2 00421aae 004863ac 0048575e 004857dc 00421aae 0048639e 
+
+
+reboot_3.txt:
+
+Report:
+2022/11/17 01:04:10
+Version 3.10.6-ad9fe6d98c
+Reason:
+
+FOTA reboot
+Backtrace: 0047fd46 004981cc 00498b7c 00498d88 004f10d4 004f11a2 00421aae 004863ac 0048575e 004857dc 00421aae 0048639e 
+
+
+reboot_4.txt:
+
+Report:
+2023/03/02 12:37:49
+Version 3.12.1-9d8272a087
+Reason:
+
+FOTA reboot
+Backtrace: 
+
+
+reboot_5.txt:
+
+Report:
+2022/12/14 21:26:52
+Version 3.10.11-55894581d9
+Reason:
+
+
+FATAL ERROR: Assert in vPortFree_Core() line:394 
+(abort)
+(_exit)
+Performing hardware reset.
+Backtrace: 
+
+
+reboot_6.txt:
+
+Report:
+2023/08/14 15:57:26
+Version 3.12.1-9d8272a087
+Reason:
+
+Cloud migration reset
+Backtrace: 
+
+
+reboot_7.txt:
+
+Report:
+2023/09/03 03:57:55
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 1536 bytes, free 960 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 413 bytes, free 608 bytes
+(abort)
+
+
+reboot_8.txt:
+
+Report:
+2023/09/07 07:58:15
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20418638 wanted 516 bytes, free 424 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20418638 wanted 115 bytes, free 240 bytes
+(abort)
+
+
+reboot_9.txt:
+
+Report:
+2023/09/09 23:58:32
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440af0 wanted 1536 bytes, free 944 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440af0 wanted 413 bytes, free 592 bytes
+(abort)
+
+
+reboot_10.txt:
+
+Report:
+2023/09/12 23:58:53
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20446438 wanted 1536 bytes, free 824 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20446438 wanted 413 bytes, free 472 bytes
+(abort)
+
+
+reboot_11.txt:
+
+Report:
+2023/09/15 19:58:38
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20418638 wanted 256 bytes, free 168 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20418638 wanted 105 bytes, free 32 bytes
+(abort)
+
+
+reboot_12.txt:
+
+Report:
+2024/01/04 01:49:19
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 1536 bytes, free 2104 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 1649 bytes, free 1136 bytes
+(abort)
+
+
+reboot_13.txt:
+
+Report:
+2023/09/20 11:59:42
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20418638 wanted 1536 bytes, free 2040 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20418638 wanted 825 bytes, free 1496 bytes
+(abort)
+
+
+reboot_14.txt:
+
+Report:
+2023/09/24 08:00:00
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 1536 bytes, free 536 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 207 bytes, free 296 bytes
+(abort)
+
+
+reboot_15.txt:
+
+Report:
+2023/09/28 08:00:23
+Version 3.12.1-9d8272a087
+Reason:
+
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 1536 bytes, free 2064 bytes
+(abort)
+
+FATAL ERROR: RTOS Malloc Failed!, Thread ID: 0x20440a78 wanted 825 bytes, free 1520 bytes
+(abort)
+
+

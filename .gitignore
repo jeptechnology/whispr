@@ -53,6 +53,8 @@ typings/
 
 # Output of 'npm pack'
 *.tgz
+# don't ignore tgz files inside src/test/
+!src/test/**/*.tgz
 
 # Yarn Integrity file
 .yarn-integrity
