@@ -153,13 +153,24 @@ function DecodeSupportPackageTxt(inputFilePath, destinationFolder)
       fs.writeFileSync(path.join(destinationFolder, "datamodel.json"), prettySupportPackageData);
    }
 
+   // remove the SupportPackage.txt file
+   fs.rmSync(inputFilePath);
+
    console.log('Sections have been successfully written to separate files.');
 }
 
 function ConcatenateOldWiserHomeLogs(logsFolder, fullLogsWritePath)
 {
-   // ensure we empty the file first
-   fs.writeFileSync(fullLogsWritePath, '');
+   // If file does not exist, create it
+   if (!fs.existsSync(fullLogsWritePath))
+   {
+      // make sure the logs folder exists
+      if (!fs.existsSync(path.dirname(fullLogsWritePath)))
+      {
+         fs.mkdirSync(path.dirname(fullLogsWritePath), { recursive: true });
+      }
+      fs.writeFileSync(fullLogsWritePath, '');      
+   }
 
    // Look for all files of the form wiser-homeN.txt where N is a number from 8 to 1
    for (let i = 8; i >= 0; i--)
@@ -233,6 +244,8 @@ async function ConcatenateContainerLocalLogs(logFolder, fullLogsWritePath)
 
    // delete the binary log file
    fs.unlinkSync(fullLogsWritePathBinary);
+   // remove the log folder
+   fs.rmdirSync(logFolder);
 }
 
 function ConcatenateAllLocalLogs(destinationFolder)
@@ -448,6 +461,12 @@ async function CreateLogDB(destinationFolder)
 // @param destination_dir - the full path to the destination directory where the decompressed files will be stored
 async function PostProcessSupportPackage(source_file, destination_dir)
 {
+   // first of all clear the destination directory
+   if (fs.existsSync(destination_dir))
+   {
+      fs.rmSync(destination_dir, { recursive: true });
+   }
+
    try 
    {
       await DecompressSupportPackage(source_file, destination_dir);
@@ -457,7 +476,7 @@ async function PostProcessSupportPackage(source_file, destination_dir)
       DecodeSupportPackageTxt(path.join(destination_dir, 'SupportPackage.txt'), destination_dir);
    
       console.log('Attempting to concatenate old Wiser Home logs');
-      ConcatenateOldWiserHomeLogs(path.join(destination_dir, "log"), path.join(destination_dir, 'wiser-home.log'));
+      ConcatenateOldWiserHomeLogs(path.join(destination_dir, "log"), path.join(destination_dir, 'logs', 'wiser-home.log'));
    
       console.log('Attempting process any container local logs found in the support package');
       ConcatenateAllLocalLogs(destination_dir);
