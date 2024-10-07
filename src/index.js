@@ -57,12 +57,9 @@ app.on("window-all-closed", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-const { PostProcessSupportPackage, spdb } = require("./support_package");
 
 // This is the main entry point for the application
 
-// Tests
-PostProcessSupportPackage(path.join(__dirname, "test", "rtos.tgz"), path.join(__dirname, "output", "rtos"));
-PostProcessSupportPackage(path.join(__dirname, "test", "wiser-home.tgz"), path.join(__dirname, "output", "wiser-home"));
-PostProcessSupportPackage(path.join(__dirname, "test", "multi-container.tgz"), path.join(__dirname, "output", "multi-container"));
-
+// Tests - uncomment to run on startup
+// const test = require("./test");
+// test.runTests();
