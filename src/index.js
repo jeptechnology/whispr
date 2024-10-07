@@ -61,7 +61,8 @@ app.on("window-all-closed", () => {
 // NOTE: The following code is in reference to docker's logdriver plugin API
 // https://github.com/docker/go-docker/blob/master/api/types/plugins/logdriver/io.go
 
-const protobuf = require("protobufjs");
+var protobuf = require("protobufjs/minimal");
+var { LogEntry } = require("./proto/dockerlogs");
 const fs = require("fs");
 
 function ReadBigEndian32bit(reader) {
@@ -72,13 +73,8 @@ function ReadBigEndian32bit(reader) {
   return value;
 }
 
-protobuf.load(__dirname + "/proto/dockerlogs.proto", function (err, root) {
-  if (err) throw err;
-
-  // Obtain a message type
-  var LogEntry = root.lookupType("LogEntry");
-
-  // Load the file /proto/test.log
+function DecodeLocalLogs() {
+  
   var myFileContents = fs.readFileSync(__dirname + "/proto/container.log");
   var reader = protobuf.Reader.create(myFileContents);
 
@@ -105,4 +101,6 @@ protobuf.load(__dirname + "/proto/dockerlogs.proto", function (err, root) {
     const date = new Date(timestamp / 1000000);
     console.log(date.toISOString() + " " + message.line);
   }
-});
+}
+
+DecodeLocalLogs();
