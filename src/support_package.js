@@ -33,22 +33,44 @@ var spdb = {
 };
 
 // expose to the module a decompression function
-async function DecompressSupportPackage(source_path, destination_dir) {
+async function DecompressSupportPackage(source_path, destination_dir) 
+{
+   // ensure that the destination directory exists
+   if (!fs.existsSync(destination_dir))
+   {
+      fs.mkdirSync(destination_dir, { recursive: true });
+   }
 
-   return decompress(source_path, destination_dir, {
-      plugins: [
-          decompressTargz()
-      ]
-   }).then(() => {
+   try 
+   {
+      const result = await decompress(source_path, destination_dir, {
+         plugins: [
+             decompressTargz()
+         ]
+      });
+
+      if (result.length === 0)
+      {
+         throw new Error('No files were decompressed');
+      }
       console.log('Files decompressed, attempting to decode SupportPackage.txt');
-   }).catch((err) => {
+   }
+   catch (err)
+   {
       console.log('Files could not be decompressed, this may be an old RTOS support package. Attempting to decode it as if it were SupportPackage.txt');
-      fs.copyFileSync(req.file.path, destination_dir, 'SupportPackage.txt');
-   });  
+      fs.copyFileSync(source_path, path.join(destination_dir, 'SupportPackage.txt'));
+   }
 }
  
-function DecodeSupportPackageTxt(inputFilePath)
+function DecodeSupportPackageTxt(inputFilePath, destinationFolder)
 {
+   // if the SupportPackage.txt file does not exist, return
+   if (!fs.existsSync(inputFilePath))
+   {
+      console.log('SupportPackage.txt file not found');
+      return;
+   }
+
    const fileContent = fs.readFileSync(inputFilePath, 'utf-8');
    
    // Split the content into sections
@@ -58,7 +80,7 @@ function DecodeSupportPackageTxt(inputFilePath)
       { name: 'DB contents:', destinaton: 'datamodel.json' },
       { name: 'Contents of file system:', destinaton: 'FileSystemContents.txt' },
       { name: 'Reset Reasons', destinaton: 'ResetReasons.txt' },
-      { name: 'Journal Log', destinaton: 'journal.log' }
+      { name: 'Journal Log', destinaton: 'logs/journal.log' }
    ];
 
    const expectedDataSections = [
@@ -94,11 +116,11 @@ function DecodeSupportPackageTxt(inputFilePath)
             {
                const dbContents = JSON.parse(sectionContents);
                const prettyDbContents = JSON.stringify(dbContents, null, 3);
-               fs.writeFileSync(path.join(supportPackagePath, expectedSection.destinaton), prettyDbContents);
+               fs.writeFileSync(path.join(destinationFolder, expectedSection.destinaton), prettyDbContents);
             }
             else
             {
-               fs.writeFileSync(path.join(supportPackagePath, expectedSection.destinaton), sectionContents);
+               fs.writeFileSync(path.join(destinationFolder, expectedSection.destinaton), sectionContents);
             }
          }
 
@@ -128,7 +150,7 @@ function DecodeSupportPackageTxt(inputFilePath)
    if (global.supportPackageData !== undefined)
    {
       const prettySupportPackageData = JSON.stringify(global.supportPackageData, null, 3);
-      fs.writeFileSync(path.join(supportPackagePath, "datamodel.json"), prettySupportPackageData);
+      fs.writeFileSync(path.join(destinationFolder, "datamodel.json"), prettySupportPackageData);
    }
 
    console.log('Sections have been successfully written to separate files.');
@@ -181,15 +203,29 @@ async function ConcatenateContainerLocalLogs(logFolder, fullLogsWritePath)
    
    for (let j = 0; j < compressedLogFiles.length; j++)
    {
-      const logFileGz = path.join(logFolder, logFiles[j]);
-      const logFile = path.join(logFolder, logFiles[j].replace('.gz', ''));
+      const logFileGz = path.join(logFolder, compressedLogFiles[j]);
+      const logFile = path.join(logFolder, compressedLogFiles[j].replace('.gz', ''));
 
-      gunzip(logFile, logFile, () => { console.log('gunzip done!') });
+      await new Promise((resolve, reject) => {
+         gunzip(logFileGz, logFile, () => { 
+            fs.unlinkSync(logFileGz);
+            resolve();  
+         });
+       });
 
       fs.appendFileSync(fullLogsWritePathBinary, fs.readFileSync(logFile));
       
       // delete the log file
       fs.unlinkSync(logFile);
+   }
+
+   // There should be one more file called container.log which is the current log file and is not compressed
+   const currentLogFile = path.join(logFolder, 'container.log');
+   if (fs.existsSync(currentLogFile))
+   {
+      fs.appendFileSync(fullLogsWritePathBinary, fs.readFileSync(currentLogFile));
+      // delete the log file
+      fs.unlinkSync(currentLogFile);
    }
 
    // now that we have concatenated the binary log files, we need to convert them to text
@@ -199,10 +235,10 @@ async function ConcatenateContainerLocalLogs(logFolder, fullLogsWritePath)
    fs.unlinkSync(fullLogsWritePathBinary);
 }
 
-function ConcatenateAllLocalLogs(supportPackagePath)
+function ConcatenateAllLocalLogs(destinationFolder)
 {
    // We look for all folders insize the ./logs folder inside the support package
-   const logsFolder = path.join(supportPackagePath, 'logs');
+   const logsFolder = path.join(destinationFolder, 'logs');
    if (!fs.existsSync(logsFolder))
    {
       console.log('No logs folder found in support package');
@@ -215,7 +251,7 @@ function ConcatenateAllLocalLogs(supportPackagePath)
    for (let i = 0; i < logFolders.length; i++)
    {
       const logFolder = path.join(logsFolder, logFolders[i]);
-      const fullLogsWritePath = path.join(supportPackagePath, logFolders[i] + '.log');
+      const fullLogsWritePath = path.join(destinationFolder, "logs", logFolders[i] + '.log');
       ConcatenateContainerLocalLogs(logFolder, fullLogsWritePath);
    }
 
@@ -327,7 +363,7 @@ function createLogEntryFromLine(default_timestamp, file, line)
    };
 }
 
-async function ingestTextLogFile(filename)
+async function IngestTextualLogFileToDB(filename)
 {
    const file = await open(filename);
    // The shortFilename should be the name of the file without the path or the suffix
@@ -354,15 +390,14 @@ async function ingestTextLogFile(filename)
    file.close();   
 }
 
-async function create_log_structure()
+async function CreateLogDB(destinationFolder)
 {
-   const supportPackagePath = path.join(__dirname, 'support_package');
-   const logFiles = fs.readdirSync(supportPackagePath).filter(fn => fn.endsWith('.log'));
+   const logFiles = fs.readdirSync(destinationFolder).filter(fn => fn.endsWith('.log'));
 
    // Read all log files and create a log structure
    for (let i = 0; i < logFiles.length; i++)
    {
-      await processFile(path.join(supportPackagePath, logFiles[i]));
+      await IngestTextualLogFileToDB(path.join(destinationFolder, logFiles[i]));
    }
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', spdb.entries.length, ' entries');
@@ -411,34 +446,29 @@ async function create_log_structure()
 //
 // @param source_file - the full path to the source file which should be a tar.gz file downloaded from the Wiser One Portal
 // @param destination_dir - the full path to the destination directory where the decompressed files will be stored
-function PostProcessSupportPackage(source_file, destination_dir)
+async function PostProcessSupportPackage(source_file, destination_dir)
 {
-   return DecompressSupportPackage(source_file, destination_dir).then(() => {
+   try 
+   {
+      await DecompressSupportPackage(source_file, destination_dir);
       
       console.log('Support package has been decompressed, attempting to process it');
       
-      DecodeSupportPackageTxt(path.join(destination_dir, 'SupportPackage.txt'));
-
+      DecodeSupportPackageTxt(path.join(destination_dir, 'SupportPackage.txt'), destination_dir);
+   
       console.log('Attempting to concatenate old Wiser Home logs');
       ConcatenateOldWiserHomeLogs(path.join(destination_dir, "log"), path.join(destination_dir, 'wiser-home.log'));
-
+   
       console.log('Attempting process any container local logs found in the support package');
       ConcatenateAllLocalLogs(destination_dir);
-
-      console.log('Attempting to create a log structure from the logs');
-      // processSupportPackage(destination_dir);
-   }).catch((err) => {
-      console.log('Support package could not be decompressed: ', err);
-   });
-
-   // Concatenate the Wiser Home logs
-   concatenateWiserHomeLogs();
-
-   // Decode the SupportPackage.txt file
-   decodeSupportPackageTxt();
    
-   // Create the log structure
-   create_log_structure();
+      console.log('Attempting to create a log structure from the logs');
+      CreateLogDB(destination_dir);
+   }
+   catch (err)
+   {
+      console.log('Error processing support package: ', err);
+   }
 }
 
 // export functions for use in app.js

@@ -61,4 +61,8 @@ const { PostProcessSupportPackage, spdb } = require("./support_package");
 
 // This is the main entry point for the application
 
-PostProcessSupportPackage(path.join(__dirname, "test", "rtos.tgz"), path.join(__dirname, "test", "rtos"));
+// Tests
+// PostProcessSupportPackage(path.join(__dirname, "test", "rtos.tgz"), path.join(__dirname, "output", "rtos"));
+// PostProcessSupportPackage(path.join(__dirname, "test", "wiser-home.tgz"), path.join(__dirname, "output", "wiser-home"));
+PostProcessSupportPackage(path.join(__dirname, "test", "multi-container.tgz"), path.join(__dirname, "output", "multi-container"));
+

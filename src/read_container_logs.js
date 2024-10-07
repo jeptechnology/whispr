@@ -3,6 +3,7 @@
 
 var protobuf = require("protobufjs/minimal");
 var { LogEntry } = require("./proto/dockerlogs");
+var fs = require("fs");
 
 function ReadBigEndian32bit(reader) {
    const buffer = reader.buf;
@@ -55,4 +56,6 @@ function DecodeLocalLogs(source_file, destination_file) {
 }
 
 // export the function so it can be used in other modules
-module.exports = DecodeLocalLogs;
+module.exports = {
+   DecodeLocalLogs
+}
