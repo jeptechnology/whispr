@@ -1,7 +1,6 @@
 // import express library - for web server
 const express = require("express");
 const webserver = express();
-const port = 3000;
 
 // import file system library - for file operations
 const fs = require("fs");
@@ -9,61 +8,10 @@ const path = require("path");
 
 // import the severity module - for mapping between syslog severity levels and their corresponding numeric values
 const severityAPI = require("./severity");
-const support_package = require("./support_package");
+var { spdb } = require("./support_package");
 
 webserver.use(express.json());
 webserver.use(express.static(__dirname + "/public"));
-webserver.use(express.static(__dirname + "/support_package"));
-
-webserver.post(
-   "/upload",
-   upload.single("support_package"),
-   function (req, res, next) {
-      // req.file is the `avatar` file
-      // req.body will hold the text fields, if there were any
-      console.log("Attempting to untar: ", req.file.path);
-
-      if (fs.existsSync(__dirname + "/support_package")) {
-         fs.rmSync(__dirname + "/support_package", { recursive: true });
-         fs.mkdirSync(__dirname + "/support_package");
-      }
-
-      decompress(req.file.path, __dirname + "/support_package", {
-         plugins: [decompressTargz()],
-      })
-         .then(() => {
-            console.log(
-               "Files decompressed, attempting to decode SupportPackage.txt"
-            );
-            postProcessSupportPackage();
-            res.json({ message: "File uploaded successfully!" });
-         })
-         .catch((err) => {
-            console.log(
-               "Files could not be decompressed, this may be an old RTOS support package. Attempting to decode it as if it were SupportPackage.txt"
-            );
-            fs.copyFileSync(
-               req.file.path,
-               path.join(__dirname, "support_package", "SupportPackage.txt")
-            );
-            postProcessSupportPackage();
-            res.json({ message: "File uploaded successfully!" });
-         })
-         .finally(() => {
-            console.log("Removing uploaded file from server: ", req.file.path);
-            fs.unlinkSync(req.file.path, (err) => {
-               if (err) {
-                  console.error(err);
-                  return;
-               }
-            });
-         });
-   }
-);
-
-webserver.listen(port, () => {
-   console.log(`Server is running on port ${port}`);
-});
 
 function validateQueryParams(req) {
    // Gather the query parameters here...
@@ -89,7 +37,7 @@ function validateQueryParams(req) {
 
    // if a component is specified, check if it exists
    if (component) {
-      if (support_package.spdb.components[component] === undefined) {
+      if (spdb.components[component] === undefined) {
          return { status: 400, message: "Component not found" };
       }
    }
@@ -108,7 +56,7 @@ function validateQueryParams(req) {
 
    // if a file is specified, check if it exists
    if (file) {
-      if (support_package.spdb.files[file] === undefined) {
+      if (spdb.files[file] === undefined) {
          return { status: 400, message: "File not found" };
       }
    }
@@ -138,12 +86,12 @@ webserver.get("/api/log", (req, res) => {
 
    // create a set of all possible indeces in the log map - this will be 0..n-1 where n is the number of log entries
    let log_indeces = new Set();
-   for (let i = 0; i < support_package.spdb.entries.length; i++)
+   for (let i = 0; i < spdb.entries.length; i++)
       log_indeces.add(i);
 
    if (component) {
       log_indeces = log_indeces.intersection(
-         support_package.spdb.components[component]
+         spdb.components[component]
       );
    }
 
@@ -161,8 +109,8 @@ webserver.get("/api/log", (req, res) => {
       severitySet = new Set();
       // Make a union of all entries that are the given severity or higher (i.e. as least as severe as the given severity)
       for (let i = severity; i <= severityAPI.highestSeverity; i++) {
-         if (support_package.spdb.severity[i] !== undefined) {
-            severitySet = severitySet.union(support_package.spdb.severity[i]);
+         if (spdb.severity[i] !== undefined) {
+            severitySet = severitySet.union(spdb.severity[i]);
          }
       }
 
@@ -170,7 +118,7 @@ webserver.get("/api/log", (req, res) => {
    }
 
    if (file) {
-      log_indeces = log_indeces.intersection(support_package.spdb.files[file]);
+      log_indeces = log_indeces.intersection(spdb.files[file]);
    }
 
    // before we generate the filtered log, we need to sort the log_indeces
@@ -180,13 +128,13 @@ webserver.get("/api/log", (req, res) => {
    logText = "";
    log_indeces.forEach((index) => {
       // check we are beyond start and before end
-      if (start && support_package.spdb.entries[index].unixtimestamp < start) {
+      if (start && spdb.entries[index].unixtimestamp < start) {
          return;
       }
-      if (end && support_package.spdb.entries[index].unixtimestamp > end) {
+      if (end && spdb.entries[index].unixtimestamp > end) {
          return;
       }
-      logText += support_package.spdb.entries[index].message + "\n";
+      logText += spdb.entries[index].message + "\n";
    });
 
    res.status(200).type("text/plain");
@@ -204,12 +152,26 @@ webserver.get("/api/structure", (req, res) => {
       .filter((fn) => fs.lstatSync(path.join(supportPackagePath, fn)).isFile());
 
    res.json({
-      components: Object.keys(support_package.spdb.components),
-      severity: Object.keys(support_package.spdb.severity),
-      logs: Object.keys(support_package.spdb.files),
+      components: Object.keys(spdb.components),
+      severity: Object.keys(spdb.severity),
+      logs: Object.keys(spdb.files),
       files: allFiles,
    });
 });
+
+// GET /file/<filename>
+// This will download the file from the support_package directory
+webserver.get('/file/:filename', function(req, res){
+   const filename = req.params.filename;
+   const filePath = path.join(spdb.destinationFolder, filename);
+   res.sendFile(filePath);
+ })
+
+ webserver.get('/log/:filename', function(req, res){
+   const filename = req.params.filename;
+   const filePath = path.join(spdb.destinationFolder, 'logs', filename);
+   res.sendFile(filePath);
+ })
 
 // export webserver for use in app.js
 module.exports = {

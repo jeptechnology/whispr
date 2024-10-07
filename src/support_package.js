@@ -30,6 +30,9 @@ var spdb = {
    severity : {},
    // All discovered log files as a Map of file -> Set of log entry indeces
    files : {},
+
+   // The destination folder where the logs are stored
+   destinationFolder: ""
 };
 
 // expose to the module a decompression function
@@ -409,14 +412,14 @@ async function IngestTextualLogFileToDB(filename)
    file.close();   
 }
 
-async function CreateLogDB(destinationFolder)
+async function CreateLogDB(logsFolder)
 {
-   const logFiles = fs.readdirSync(destinationFolder).filter(fn => fn.endsWith('.log'));
+   const logFiles = fs.readdirSync(logsFolder).filter(fn => fn.endsWith('.log'));
 
    // Read all log files and create a log structure
    for (let i = 0; i < logFiles.length; i++)
    {
-      await IngestTextualLogFileToDB(path.join(destinationFolder, logFiles[i]));
+      await IngestTextualLogFileToDB(path.join(logsFolder, logFiles[i]));
    }
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', spdb.entries.length, ' entries');
@@ -472,7 +475,14 @@ async function PostProcessSupportPackage(source_file, destination_dir)
       // first of all clear the destination directory
       if (fs.existsSync(destination_dir))
       {
-         fs.rmSync(destination_dir, { recursive: true });
+         try 
+         {
+            fs.rmdirSync(destination_dir, { recursive: true });
+         }
+         catch (err)
+         {
+            console.log('Error removing destination directory: ', err);
+         }
       }
    
       await DecompressSupportPackage(source_file, destination_dir);
@@ -487,11 +497,18 @@ async function PostProcessSupportPackage(source_file, destination_dir)
       console.log('Attempting process any container local logs found in the support package');
       ConcatenateAllLocalLogs(destination_dir);
    
-      console.log('Attempting to create a log structure from the logs');
-      CreateLogDB(destination_dir);
+      console.log('Attempting to create a log structure from all files in /logs folder');
+      await CreateLogDB(path.join(destination_dir, 'logs'));
 
       // remove the log folder
-      fs.rmSync(path.join(destination_dir, 'log'), { recursive: true });
+      oldLogFolder = path.join(destination_dir, 'log');
+      if (fs.existsSync(oldLogFolder))
+      {
+         fs.rmSync(oldLogFolder, { recursive: true });
+      }
+
+      // This is used by the web server to know where the logs are stored
+      spdb.destinationFolder = destination_dir;
    }
    catch (err)
    {

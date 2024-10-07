@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, ipcRenderer, dialog } = require("electron");
 const path = require("node:path");
+const { webserver } = require("./webserver");
 
-webserver = require("./app");
 supportPackage = require("./support_package");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -79,6 +79,13 @@ app.on("window-all-closed", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+// Start the webserver
+const port = 3000;
+webserver.listen(port, () => {
+   console.log(`Server is running on port ${port}`);
+});
+
 
 // This is the main entry point for the application
 
