@@ -1,42 +1,18 @@
-export default function parseTar(tarfile: Blob): Promise<Readonly<TarFile<Blob>>[]>;
-export default function parseTar(tarfile: ArrayBuffer | ArrayBufferLike): Readonly<TarFile<Uint8Array>>[];
-export default function parseTar(tarfile: Blob | ArrayBuffer | ArrayBufferLike) {
-    if (tarfile instanceof Blob) {
-        return (async () => {
-            const input = new Blob([tarfile]);
-            const noOfBlocks = input.size / 512;
-            const files: Readonly<TarFile<Blob>>[] = [];
-            {
-                let blockIdx = 0;
-                while (blockIdx < noOfBlocks) {
-                    const block = input.slice(blockIdx * 512, (blockIdx + 1) * 512);
-                    if (await isEmptyBlock(block)) break;
-                    const file = parseTarHeader<Blob>(await block.arrayBuffer());
-                    const fileBlocksCount = Math.ceil(file.size / 512);
-                    file.contents = input.slice((blockIdx + 1) * 512, (blockIdx + 1 + fileBlocksCount) * 512).slice(0, file.size);
-                    files.push(Object.freeze(file!));
-                    blockIdx += fileBlocksCount + 1;
-                }
-            }
-            return files;
-        })();
-    } else {
-        const input = new Uint8Array(tarfile);
-        const noOfBlocks = input.byteLength / 512;
-        const files: Readonly<TarFile<Uint8Array>>[] = [];
-        {
-            let blockIdx = 0;
-            while (blockIdx < noOfBlocks) {
-                const block = input.slice(blockIdx * 512, (blockIdx + 1) * 512);
-                if (isEmptyBlock(block)) break;
-                const file = parseTarHeader<Uint8Array>(block.buffer);
-                const fileBlocksCount = Math.ceil(file.size / 512);
-                file.contents = input.slice((blockIdx + 1) * 512, (blockIdx + 1 + fileBlocksCount) * 512).slice(0, file.size);
-                files.push(Object.freeze(file!));
-                blockIdx += fileBlocksCount + 1;
-            }
-            return files;
+export default function parseTar(input: Uint8Array, onFile: (file: TarFile<Uint8Array<ArrayBufferLike>>) => void, onCompletion?: () => void) {
+    const noOfBlocks = input.byteLength / 512;
+    {
+        let blockIdx = 0;
+        while (blockIdx < noOfBlocks) {
+            const block = input.slice(blockIdx * 512, (blockIdx + 1) * 512);
+            if (isEmptyBlock(block)) break;
+            const file = parseTarHeader<Uint8Array>(block.buffer);
+            const fileBlocksCount = Math.ceil(file.size / 512);
+            file.contents = input.slice((blockIdx + 1) * 512, (blockIdx + 1 + fileBlocksCount) * 512).slice(0, file.size);
+            onFile(file);
+            blockIdx += fileBlocksCount + 1;
         }
+
+        onCompletion?.();
     }
 }
 function isEmptyBlock(block: Blob): Promise<boolean>;
