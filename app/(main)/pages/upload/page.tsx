@@ -26,12 +26,13 @@ export default function UploadSupportPackage() {
             return;
         }
 
-        supportPackage.uploadSupportPackage(file, (result) => {
-            if (result) {
-                toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Support Package Uploaded' });
-            } else {
-                toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Support Package Upload Failed' });
-            }
+        supportPackage.uploadSupportPackage(file).then(() => {
+            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Support Package Uploaded' });
+        }).catch((error) => {
+            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Support Package Upload Failed' });
+        }).finally(() => {
+            fileUploadRef.current?.clear();
+            setTotalSize(0);
         });
     };
 

@@ -3,7 +3,7 @@ import { createContext } from 'react';
 import { Severity, getSeverityValueOrDefault, getSeverityDefaultValue } from './Severity';
 import { ChildContainerProps } from '@/types';
 import parseTar from './parseTar';
-import { gunzip } from 'fflate';
+import { gunzip, gunzipSync } from 'fflate';
 import DecodeLogs from './DecodeLogs';
 import { ProcessedLogEntry } from './ProcessedLogEntry';
 
@@ -52,8 +52,8 @@ function DecodeLogfile(filename: string, contents: Uint8Array<ArrayBufferLike>):
    {
       return DecodeLogs(contents);
    }
-   // otherwise we can just convert the binary contents to a string
-   return contents.toString();
+   // otherwise we expect the contents to be a text file so we can convert each byte to a char:
+   return new TextDecoder().decode(contents);
 }
 
 async function DecompressSupportPackage(sp: SupportPackageProps, file: File)
@@ -65,60 +65,47 @@ async function DecompressSupportPackage(sp: SupportPackageProps, file: File)
       return Promise.reject('Please upload a .tgz file');      
    }
 
-   // now set up a FileReader to read the file
+   // Await the file read to complete
    const reader = new FileReader();
-   // set up the onload function
-   reader.onload = function (e) {
+   const fileContents = await new Promise<ArrayBuffer>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(file);
+   });
 
-       console.log('File Loaded. Attempting to gunzip');
+   // get the file contents
+   const decompressedTarfile = gunzipSync(new Uint8Array(fileContents));
 
-       // get the file contents
-       const contents = e.target?.result;
-       gunzip(new Uint8Array(contents as ArrayBuffer), (err, result) => {
-           if (err) {
-               return Promise.reject('Error decompressing file');
-           }
-           console.log('File Gunzipped. Attempting to parse');
+   // now we can parse the tarball
+   parseTar(decompressedTarfile, (availableFile) => {
+      // save the file to the SupportPackage
+      if (availableFile.contents === undefined
+         || availableFile.contents.length === 0
+         )
+      {
+         return;
+      }
 
-           // now we can parse the tarball
-           parseTar(result, (availableFile) => {
-               // save the file to the SupportPackage
-               if (availableFile.contents === undefined
-                  || availableFile.contents.length === 0
-                  )
-               {
-                  return;
-               }
+      console.log('File available: ', availableFile.name);
 
-               console.log('File available: ', availableFile.name);
-
-               // if the file ends with '.gz' then we need to decompress it again
-               if (availableFile.name.endsWith('.gz'))
-               {
-                  console.log('File is a .gz file, attempting to decompress');
-                  gunzip(availableFile.contents, (err, result) => {
-                     if (err) {
-                        console.log('Error decompressing file: ', err);
-                        return;
-                     }
-                     // strip the .gz from the filename
-                     const decompressedFileName = availableFile.name.slice(0, -3);
-                     console.log('File decompressed. Saving to SupportPackage as ', decompressedFileName);
-                     sp.createFile(decompressedFileName, DecodeLogfile(decompressedFileName, result));
-                  });
-                  return;
-               }
-
-               sp.createFile(availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
-               
-           }, () => {
-               console.log('All files parsed');              
-               return Promise.resolve();
-           });
-       });
-   };
-
-   reader.readAsArrayBuffer(file);
+      // if the file ends with '.gz' then we need to decompress it again
+      if (availableFile.name.endsWith('.gz'))
+      {
+         console.log('File is a .gz file, attempting to decompress');
+         const decompressedData = gunzipSync(availableFile.contents);
+         // strip the .gz from the filename
+         const decompressedFileName = availableFile.name.slice(0, -3);
+         console.log('File decompressed. Saving to SupportPackage as ', decompressedFileName);
+         sp.createFile(decompressedFileName, DecodeLogfile(decompressedFileName, decompressedData));
+      }
+      else
+      {
+         sp.createFile(availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
+      }      
+   }, () => {
+      console.log('All files parsed');              
+      return Promise.resolve();
+   });
 }
 
 function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
@@ -248,6 +235,8 @@ function ConcatenateOldWiserHomeLogs(sp: SupportPackageProps, logsFolder: string
 
 async function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder: string, fullLogsWritePath: string)
 {
+   console.log('Concatenating container logs in folder: ', logFolder);
+
    let fullLogContents = '';
 
    // There may be multiple log files in the container folder of the form: 
@@ -278,7 +267,8 @@ async function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder:
    });
    
    partialLogFilenames.forEach((partialLogFilename) => {
-      // append the contents of the file to the full log contents
+      console.log('Found container log: ', partialLogFilename);
+         // append the contents of the file to the full log contents
       fullLogContents += sp.files.get(partialLogFilename);
       // delete the file
       sp.deleteFile(partialLogFilename);
@@ -308,6 +298,8 @@ function ConcatenateAllLocalLogs(sp: SupportPackageProps)
                                   .filter(fn => fn.startsWith('logs/') && fn.endsWith('/container.log'))
                                   .map(fn => fn.split('/')[1]);
   
+   console.log("Found containers: ", containerNames);
+
    // for each folder, call ConcatenateContainerLocalLogs
    containerNames.forEach((containerName) => { 
       const fullLogsWritePath = 'logs/' + containerName + '.log';
@@ -427,6 +419,8 @@ async function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: strin
    const shortFilename = filename.split('/').pop()?.split('.').shift() as string;
    let default_timestamp = 0;
 
+   console.log('Ingesting log file: ', filename, ' as ', shortFilename);
+
    // check the file exists in the sp
    if (!sp.files.has(filename) || !sp.files.get(filename))
    {
@@ -434,26 +428,23 @@ async function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: strin
       return;
    }
 
-   // For each line in the file, create a log entry
-   const fileContent = sp.files.get(filename);
-   if (fileContent) {
-      fileContent.split('\n').forEach((line) => {
+   // create a Reader for the string contents of the file
+   sp.files.get(filename)?.split('\n').forEach((line) => {
 
-         if (line === null || line.trim() === '')
-         {
-            return; // if line is null or empty, skip it
-         }
+      if (line === null || line.trim() === '')
+      {
+         return; // if line is null or empty, skip it
+      }
 
-         const entry = CreateLogEntryFromLine(default_timestamp, shortFilename, line);
-         if (entry !== null)
-         {
-            sp.entries.push(entry);
-            // set the default timestamp to the last entry
-            // if the next entry cannot determine its timestamp, we will use this one
-            default_timestamp = entry.unixtimestamp; 
-         }
-      });
-   }
+      const entry = CreateLogEntryFromLine(default_timestamp, shortFilename, line);
+      if (entry !== null)
+      {
+         sp.entries.push(entry);
+         // set the default timestamp to the last entry
+         // if the next entry cannot determine its timestamp, we will use this one
+         default_timestamp = entry.unixtimestamp; 
+      }
+   });
 }
 
 async function CreateLogDB(sp: SupportPackageProps)
@@ -543,9 +534,11 @@ export const SupportPackageProvider = ({ children }: ChildContainerProps) => {
          throw new Error('Function not implemented.');
       },
       createFile: (filename: string, contents: string) => {
+         console.log('Creating file: ', filename, ' with content length: ', contents.length);
          value.files.set(filename, contents);
       },
       deleteFile: (filename: string) => {
+         console.log('Removing file: ', filename);
          value.files.delete(filename);
       },
       searchFiles: (prefix: string) => {
