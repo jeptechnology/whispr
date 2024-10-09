@@ -77,38 +77,47 @@ async function DecompressSupportPackage(sp: SupportPackageProps, file: File)
    });
 
    // get the file contents
-   const decompressedTarfile = gunzipSync(new Uint8Array(fileContents));
+   try 
+   {
+      const decompressedTarfile = gunzipSync(new Uint8Array(fileContents));
 
-   // now we can parse the tarball
-   parseTar(decompressedTarfile, (availableFile) => {
-      // save the file to the SupportPackage
-      if (availableFile.contents === undefined
-         || availableFile.contents.length === 0
-         )
-      {
-         return;
-      }
-
-      console.log('File available: ', availableFile.name);
-
-      // if the file ends with '.gz' then we need to decompress it again
-      if (availableFile.name.endsWith('.gz'))
-      {
-         console.log('File is a .gz file, attempting to decompress');
-         const decompressedData = gunzipSync(availableFile.contents);
-         // strip the .gz from the filename
-         const decompressedFileName = availableFile.name.slice(0, -3);
-         console.log('File decompressed. Saving to SupportPackage as ', decompressedFileName);
-         sp.createFile(decompressedFileName, DecodeLogfile(decompressedFileName, decompressedData));
-      }
-      else
-      {
-         sp.createFile(availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
-      }      
-   }, () => {
-      console.log('All files parsed');              
-      return Promise.resolve();
-   });
+      // now we can parse the tarball
+      parseTar(decompressedTarfile, (availableFile) => {
+         // save the file to the SupportPackage
+         if (availableFile.contents === undefined
+            || availableFile.contents.length === 0
+            )
+         {
+            return;
+         }
+   
+         console.log('File available: ', availableFile.name);
+   
+         // if the file ends with '.gz' then we need to decompress it again
+         if (availableFile.name.endsWith('.gz'))
+         {
+            console.log('File is a .gz file, attempting to decompress');
+            const decompressedData = gunzipSync(availableFile.contents);
+            // strip the .gz from the filename
+            const decompressedFileName = availableFile.name.slice(0, -3);
+            console.log('File decompressed. Saving to SupportPackage as ', decompressedFileName);
+            sp.createFile(decompressedFileName, DecodeLogfile(decompressedFileName, decompressedData));
+         }
+         else
+         {
+            sp.createFile(availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
+         }      
+      }, () => {
+         console.log('All files parsed');              
+         return Promise.resolve();
+      });
+   }
+   catch (err)
+   {
+      console.log('Error decompressing support package, assume it is an RTOS support package');
+      // RTOS packages just need to be saved as the file "SupportPackage.txt"
+      sp.createFile('SupportPackage.txt', new TextDecoder().decode(fileContents));
+   }
 }
 
 function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
