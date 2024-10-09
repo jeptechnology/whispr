@@ -51,7 +51,7 @@ export interface SupportPackageProps {
 function DecodeLogfile(filename: string, contents: Uint8Array<ArrayBufferLike>): string
 {
    // if the filename is of the form: log/<name>/container.log.n (where n is a number) then we need to decode it as a protobuf message
-   if (filename.startsWith('log/') && filename.search('/container.log') > 0)
+   if (filename.startsWith('logs/') && filename.search('/container.log') > 0)
    {
       return DecodeLogs(contents);
    }
