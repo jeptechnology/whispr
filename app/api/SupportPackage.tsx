@@ -43,7 +43,10 @@ export interface SupportPackageProps {
 
    // search for all files with given prefix:
    searchFiles: (prefix: string) => string[];
-}
+
+   // updateTime: This is a value that will be updated every time the support package is updated
+   lastUpdateTime: Date;
+}   
 
 function DecodeLogfile(filename: string, contents: Uint8Array<ArrayBufferLike>): string
 {
@@ -216,7 +219,7 @@ function ConcatenateOldWiserHomeLogs(sp: SupportPackageProps, logsFolder: string
          logFileName = 'wiser-home.txt';
       }
 
-      const logFileToLookFor = logsFolder + '/' + logFileName;
+      const logFileToLookFor = logsFolder + logFileName;
       // if log file exists, copy it to fullLogsWritePath
       if (sp.files.has(logFileToLookFor))
       {
@@ -506,6 +509,9 @@ async function PostProcessSupportPackage(sp: SupportPackageProps, source_file: F
    
       console.log('Attempting to create a log structure from all files in /logs folder');
       await CreateLogDB(sp);
+
+      // update the lastUpdateTime - this allows others to subscribe to changes in the support package
+      sp.lastUpdateTime = new Date();
    }
    catch (err)
    {
@@ -527,6 +533,7 @@ export const SupportPackageProvider = ({ children }: ChildContainerProps) => {
       components: new Map<string, Set<number>>(),
       severity: new Map<Severity, Set<number>>(),
       logFileMap: new Map<string, Set<number>>(),
+      lastUpdateTime: new Date(),
       uploadSupportPackage: (file: File) => {
          return PostProcessSupportPackage(value, file);
       },
