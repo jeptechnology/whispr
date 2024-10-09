@@ -13,22 +13,18 @@ const LogViewer = (props: LogViewerProps ) => {
 
     const sp = useContext(SupportPackageContext);
 
-    console.log("LogViewer wants to read file: ", props.filename);
-    console.log("SupportPackage has file?: ", sp.files.has(props.filename || ""));
-
-    const text = props.filename ? sp.files.get(props.filename) : "No file selected";
-
-    console.log("LogViewer text: ", text); 
-
-    return (
+    return props.filename ? 
+    (
         <LazyLog 
             caseInsensitive
             enableHotKeys
             enableSearch
             extraLines={1}
             // height={1600}
-            text={text}                    
+            text={sp.files.get(props.filename)}                    
             />
+    ) : (
+        <div/>
     );
 };
 

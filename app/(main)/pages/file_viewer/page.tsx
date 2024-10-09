@@ -12,23 +12,22 @@ const FileViewer = () => {
     const [selectedFile, setSelectedFile] = useState<string>();
 
     function onFileSelect(e: any) {
-        setSelectedFile(e.value.label);
+        setSelectedFile(e.value);
     }
 
     // map the files to the dropdown options
-    const options: { label: string }[] = [];
+    const options: string[] = [];
     sp.files.forEach((_, filename) => {
-        options.push({ label: filename });
+        options.push(filename);
     });
 
     return (
         <div className="grid">
             <div className="col-12">
-                <Dropdown options={options} placeholder="Select a file to view" onChange={onFileSelect} />
+                <Dropdown value={selectedFile} options={options} placeholder="Select a file to view" onChange={onFileSelect} />
             </div>
             
-            {/* <div className="col-12" style={{ height: "calc(100vh - 200px)" }}> */}
-            <div className="col-12" style={{ height: "flex" }}>
+            <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
                 <LogViewer filename={selectedFile}/>
             </div>            
         </div>

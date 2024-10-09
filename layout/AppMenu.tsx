@@ -31,16 +31,10 @@ function GenerateMenuFromSupportPackage(sp: SupportPackageProps): AppMenuItem[] 
         label: 'Menu',
         items: [
             // { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
-            { label: 'Upload', icon: 'pi pi-fw pi-file', to: '/pages/upload' },
+            { label: 'Upload', icon: 'pi pi-fw pi-upload', to: '/pages/upload' },
             { label: 'File Viewer', icon: 'pi pi-fw pi-file', to: '/pages/file_viewer' },
-            { label: 'Filter Logs', icon: 'pi pi-fw pi-filter', to: '/uikit/misc' }        
+            { label: 'Logs Viewer', icon: 'pi pi-fw pi-filter', to: '/uikit/misc' }        
         ]
-    });
-
-    // Add a menu item for each file in the support package
-    menu.push({
-        label: 'Other Files',
-        items: GenerateOtherFilesMenu(sp)
     });
 
     return menu;
