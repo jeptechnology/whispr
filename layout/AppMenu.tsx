@@ -7,30 +7,6 @@ import { MenuProvider } from './context/menucontext';
 import { AppMenuItem } from '@/types';
 import { SupportPackageContext, SupportPackageProps } from '@/app/api/SupportPackage';
 
-
-function GenerateLogsMenu(sp: SupportPackageProps): AppMenuItem[] {
-    const logs: AppMenuItem[] = [];
-
-    // The first entry is always the logs filter page
-    logs.push({
-        label: 'Filter Logs',
-        icon: 'pi pi-fw pi-filter',
-        to: '/uikit/misc'
-    });
-
-    sp.files.forEach((_, filename) => {
-        if (filename.endsWith('.log')) {
-            logs.push({
-                label: filename,
-                icon: 'pi pi-fw pi-file',
-                to: `/uikit/file`
-            });
-        }
-    });
-
-    return logs;
-}
-
 function GenerateOtherFilesMenu(sp: SupportPackageProps): AppMenuItem[] {
     const otherFiles: AppMenuItem[] = [];
 
@@ -52,17 +28,13 @@ function GenerateMenuFromSupportPackage(sp: SupportPackageProps): AppMenuItem[] 
 
     // We always have a home menu item
     menu.push({
-        label: 'Home',
+        label: 'Menu',
         items: [
             // { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
             { label: 'Upload', icon: 'pi pi-fw pi-file', to: '/pages/upload' },
+            { label: 'File Viewer', icon: 'pi pi-fw pi-file', to: '/pages/file_viewer' },
+            { label: 'Filter Logs', icon: 'pi pi-fw pi-filter', to: '/uikit/misc' }        
         ]
-    });
-
-    // Add the logs menu item
-    menu.push({
-        label: 'Logs',
-        items: GenerateLogsMenu(sp)
     });
 
     // Add a menu item for each file in the support package
