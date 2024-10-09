@@ -4,7 +4,8 @@ import React, { use } from "react";
 import { useContext, useState, useEffect } from "react"; 
 import { SupportPackageContext } from "../../../api/SupportPackage";
 import { Dropdown } from "primereact/dropdown";
-import LogViewer from "./LogViewer";
+import LogViewer from "./LogViewer"; // For log files
+import JsonViewer from "./JsonViewer"; // For json files
 
 const FileViewer = () => {
 
@@ -26,9 +27,13 @@ const FileViewer = () => {
             <div className="col-12">
                 <Dropdown value={selectedFile} options={options} placeholder="Select a file to view" onChange={onFileSelect} />
             </div>
-            
             <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
-                <LogViewer filename={selectedFile}/>
+                { selectedFile && selectedFile.endsWith(".log") ? 
+                (
+                  <LogViewer filename={selectedFile}/>
+                ) : (
+                  <JsonViewer filename={selectedFile}/>
+                ) }
             </div>            
         </div>
     );
