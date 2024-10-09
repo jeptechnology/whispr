@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useContext } from 'react';
 import { Toast } from 'primereact/toast';
 import { FileUpload, FileUploadHeaderTemplateOptions, FileUploadSelectEvent, FileUploadHandlerEvent} from 'primereact/fileupload';
 import { ProgressBar } from 'primereact/progressbar';
 import { Button } from 'primereact/button';
 import { Tooltip } from 'primereact/tooltip';
-import { Tag } from 'primereact/tag';
-import parseTar from '../../utilities/parseTar';
-import { gunzip } from 'fflate';
+import { SupportPackageContext } from '../../../api/SupportPackage';
 
-export default function FileDemo() {
+export default function UploadSupportPackage() {
     const toast = useRef<Toast>(null);
     const [totalSize, setTotalSize] = useState(0);
     const fileUploadRef = useRef<FileUpload>(null);
+    const supportPackage = useContext(SupportPackageContext);
 
     const onTemplateSelect = (e: FileUploadSelectEvent) => {
         let file = e.files[0];
@@ -27,36 +26,13 @@ export default function FileDemo() {
             return;
         }
 
-        // now set up a FileReader to read the file
-        const reader = new FileReader();
-        // set up the onload function
-        reader.onload = function (e) {
-
-            console.log('File Loaded. Attempting to gunzip');
-
-            // get the file contents
-            const contents = e.target?.result;
-            gunzip(new Uint8Array(contents as ArrayBuffer), (err, result) => {
-                if (err) {
-                    toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Error decompressing file' });
-                    return;
-                }
-                console.log('File Gunzipped. Attempting to parse');
-                let filesAvailable = "";
-                // now we can parse the tarball
-                parseTar(result, (availableFile) => {
-                    filesAvailable += availableFile.name;
-                    
-                }, () => {
-                    console.log('All files parsed');
-                    console.log(filesAvailable);
-                    fileUploadRef.current?.clear();
-                    toast.current?.show({ severity: 'info', summary: 'Success', detail: 'File Uploaded' });
-                });
-            });
-        };
-
-        reader.readAsArrayBuffer(file);
+        supportPackage.uploadSupportPackage(file, (result) => {
+            if (result) {
+                toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Support Package Uploaded' });
+            } else {
+                toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Support Package Upload Failed' });
+            }
+        });
     };
 
     const onTemplateClear = () => {
