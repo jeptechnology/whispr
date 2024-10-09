@@ -28,6 +28,20 @@ function GetFileTypeFromFilename(filename: string): string {
     return 'File';
 }
 
+function GetPrettyFileSize(size: number): string {
+    if (size < 1024) {
+        return size + ' B';
+    }
+    else if (size < 1024 * 1024) {
+        return (size / 1024).toFixed(2) + ' KB';
+    }
+    else if (size < 1024 * 1024 * 1024) {
+        return (size / 1024 / 1024).toFixed(2) + ' MB';
+    }
+    else {
+        return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+    }
+}
 
 function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[] {
     const files: TreeNode[] = [];
@@ -36,7 +50,7 @@ function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[
             key: filename,
             data: {
                 name: filename,
-                size: content.length,
+                size: GetPrettyFileSize(content.length),
                 type: GetFileTypeFromFilename(filename)
             }
         };
@@ -51,9 +65,12 @@ const UploadPage = () => {
     const SupportPackage = useContext(SupportPackageContext);
 
     const onUploadComplete = () => {
-        console.log("SupportPackage.lastUpdateTime: ", SupportPackage.lastUpdateTime);
         setFiles2(GenerateTableDataFromSupportPackage(SupportPackage));
     };
+
+    useEffect(() => {
+        console.log("SupportPackage.updateCounter: ", SupportPackage.updateCounter);
+    }, [SupportPackage.updateCounter]);
 
     return (
         <div className="grid">
@@ -63,7 +80,7 @@ const UploadPage = () => {
             <div className="col-12">
                 <div className="card">
                     <h5>Support Package Analysis</h5>
-                    <TreeTable value={files2} selectionMode="checkbox" selectionKeys={selectedFileKeys2} onSelectionChange={(e) => setSelectedFileKeys2(e.value)}>
+                    <TreeTable value={files2}>
                         <Column field="name" header="Name" expander />
                         <Column field="size" header="Size" />
                         <Column field="type" header="Type" />

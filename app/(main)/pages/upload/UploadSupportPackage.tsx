@@ -41,7 +41,7 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
     };
 
     const headerTemplate = (options: FileUploadHeaderTemplateOptions) => {
-        const { className, chooseButton, uploadButton } = options;
+        const { className, chooseButton } = options;
         const value = totalSize / 100000;
         const formatedValue = fileUploadRef && fileUploadRef.current ? fileUploadRef.current.formatSize(totalSize) : '0 B';
 
@@ -49,7 +49,7 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
             <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
                 {chooseButton}
                 <div className="flex align-items-center gap-3 ml-auto">
-                    <span>{formatedValue} / 10 MB</span>
+                    <span>{formatedValue}</span>
                     <ProgressBar value={value} showValue={false} style={{ width: '10rem', height: '12px' }}></ProgressBar>
                 </div>
             </div>
@@ -57,6 +57,11 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
     };
 
     const emptyTemplate = () => {
+        // if supportPackage is set, return an empty div
+        if (supportPackage.entries.length > 0) {
+            return <div></div>;
+        }
+
         return (
             <div className="flex align-items-center flex-column">
                 <i className="pi pi-image mt-3 p-5" style={{ fontSize: '5em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)' }}></i>
@@ -68,6 +73,7 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
     };
 
     const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'custom-choose-btn p-button-rounded p-button-outlined' };
+    const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'custom-cancel-btn p-button-rounded p-button-outlined' };
 
     return (
         <div>
@@ -88,7 +94,8 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
                 headerTemplate={headerTemplate} 
                 // itemTemplate={itemTemplate} 
                 emptyTemplate={emptyTemplate}
-                chooseOptions={chooseOptions} 
+                chooseOptions={chooseOptions}
+                cancelOptions={cancelOptions}
                 />
         </div>
     )

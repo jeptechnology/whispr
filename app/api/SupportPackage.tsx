@@ -45,7 +45,7 @@ export interface SupportPackageProps {
    searchFiles: (prefix: string) => string[];
 
    // updateTime: This is a value that will be updated every time the support package is updated
-   lastUpdateTime: Date;
+   updateCounter: number;
 }   
 
 function DecodeLogfile(filename: string, contents: Uint8Array<ArrayBufferLike>): string
@@ -510,8 +510,8 @@ async function PostProcessSupportPackage(sp: SupportPackageProps, source_file: F
       console.log('Attempting to create a log structure from all files in /logs folder');
       await CreateLogDB(sp);
 
-      // update the lastUpdateTime - this allows others to subscribe to changes in the support package
-      sp.lastUpdateTime = new Date();
+      // increment the update counter
+      sp.updateCounter += 1;
    }
    catch (err)
    {
@@ -533,7 +533,7 @@ export const SupportPackageProvider = ({ children }: ChildContainerProps) => {
       components: new Map<string, Set<number>>(),
       severity: new Map<Severity, Set<number>>(),
       logFileMap: new Map<string, Set<number>>(),
-      lastUpdateTime: new Date(),
+      updateCounter: 0,
       uploadSupportPackage: (file: File) => {
          return PostProcessSupportPackage(value, file);
       },
