@@ -43,7 +43,7 @@ function GetPrettyFileSize(size: number): string {
 
 function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[] {
     const files: TreeNode[] = [];
-    sp.files.entries().forEach(([filename, content]) => {
+    Array.from(sp.files.entries()).forEach(([filename, content]) => {
         const node: TreeNode = {
             key: filename,
             data: {
