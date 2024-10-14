@@ -1,18 +1,17 @@
 'use client';
 
 import React from "react";
-import { useContext, useState } from "react"; 
-import { SupportPackageContext } from "../../../api/SupportPackage";
+import { useState } from "react"; 
 import { Dropdown } from "primereact/dropdown";
 
 // define the FilePicker component props
 export interface FilePickerProps {
+   files: Map<string, string>;
    onFileSelected?: (filename: string, displayAsJson: boolean) => void;
 }
 
 const FilePicker = (props: FilePickerProps) => {
 
-    const sp = useContext(SupportPackageContext);
     const [selectedFile, setSelectedFile] = useState<string>();
 
     function onFileSelect(e: any) {
@@ -30,8 +29,9 @@ const FilePicker = (props: FilePickerProps) => {
     }
 
     // map the files to the dropdown options
-    const options: string[] = ["<All logs>"];
-    sp.files.forEach((_, filename) => {
+    const options: string[] = props.files.size === 0 ? [] : ["<Analysis>", "<All logs>"];
+
+    props.files.forEach((_, filename) => {
         
       options.push(filename);
 
@@ -42,7 +42,7 @@ const FilePicker = (props: FilePickerProps) => {
     });
 
     return (
-      <Dropdown value={selectedFile} options={options} placeholder="Select a file to view" onChange={onFileSelect} />
+      <Dropdown value={selectedFile} options={options} placeholder="Select a view" onChange={onFileSelect} />
     );
 };
 

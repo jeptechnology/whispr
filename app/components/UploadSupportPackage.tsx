@@ -5,7 +5,7 @@ import { Toast } from 'primereact/toast';
 import { FileUpload, FileUploadHeaderTemplateOptions, FileUploadSelectEvent, FileUploadHandlerEvent} from 'primereact/fileupload';
 import { ProgressBar } from 'primereact/progressbar';
 import { Tooltip } from 'primereact/tooltip';
-import { SupportPackageContext } from '../../../api/SupportPackage';
+import { SupportPackageContext } from '../api/SupportPackage';
 
 export default function UploadSupportPackage(props: UploadSupportPackageProps) {
     const toast = useRef<Toast>(null);
@@ -86,16 +86,11 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
             <FileUpload ref={fileUploadRef} 
                 // url="/api/upload" 
                 customUpload
+                mode="basic"
                 accept="*.tgz" 
                 maxFileSize={10000000} // 10MB
-                onSelect={onTemplateSelect} 
-                onError={onTemplateClear} 
-                onClear={onTemplateClear}
-                headerTemplate={headerTemplate} 
-                // itemTemplate={itemTemplate} 
-                emptyTemplate={emptyTemplate}
-                chooseOptions={chooseOptions}
-                cancelOptions={cancelOptions}
+                onSelect={onTemplateSelect}
+                chooseLabel='Upload Support Package'
                 />
         </div>
     )

@@ -3,9 +3,9 @@
 import React, { use } from "react";
 import { useContext, useState, useEffect } from "react"; 
 import { SupportPackageContext } from "../../../api/SupportPackage";
-import FilePicker from "./FilePicker"; // For selecting files
-import LogViewer from "./LogViewer"; // For log files
-// import JsonViewer from "./JsonViewer"; // For json files
+import FilePicker from "../../../components/FilePicker"; // For selecting files
+import LogViewer from "../../../components/LogViewer"; // For log files
+import JsonViewer from "../../../components/JsonViewer"; // For json files
 
 const FileViewer = () => {
 
@@ -21,7 +21,7 @@ const FileViewer = () => {
     return (
         <div className="grid">
             <div className="col-12">
-                <FilePicker onFileSelected={onFileSelect}/>
+                <FilePicker onFileSelected={onFileSelect} files={sp.files}/>
             </div>
             <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
                 { selectedFile ? 

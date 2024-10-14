@@ -46,6 +46,9 @@ export interface SupportPackageProps {
 
    // updateTime: This is a value that will be updated every time the support package is updated
    updateCounter: number;
+
+   // chosen view
+   chosenView?: string;
 }   
 
 function DecodeLogfile(filename: string, contents: Uint8Array): string

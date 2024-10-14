@@ -2,10 +2,15 @@
 
 import React from "react";
 import { useContext } from "react"; 
+<<<<<<< Updated upstream:app/(main)/pages/file_viewer/JsonViewer.tsx
 import { SupportPackageContext } from "../../../api/SupportPackage";
 import dynamic from 'next/dynamic';
 
 const ReactJson = dynamic(() => import('@microlink/react-json-view'), { ssr: false });
+=======
+import { SupportPackageContext } from "../api/SupportPackage";
+import ReactJson from '@microlink/react-json-view'
+>>>>>>> Stashed changes:app/components/JsonViewer.tsx
 
 // define the JsonViewer component props
 export interface JsonViewerProps {

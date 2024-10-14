@@ -2,22 +2,36 @@
 
 import Link from 'next/link';
 import { classNames } from 'primereact/utils';
-import React, { forwardRef, useContext, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useContext, useState, useImperativeHandle, useRef } from 'react';
 import { AppTopbarRef } from '@/types';
 import { LayoutContext } from './context/layoutcontext';
-import Dropdown from 'primereact/dropdown';
+import UploadSupportPackage from '@/app/components/UploadSupportPackage';
+import FilePicker from '../app/components/FilePicker';
+import { SupportPackageContext } from '../app/api/SupportPackage';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     const { layoutConfig, layoutState, onMenuToggle, showProfileSidebar } = useContext(LayoutContext);
+    const sp = useContext(SupportPackageContext);
     const menubuttonRef = useRef(null);
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
+    const [files, setFiles] = useState<Map<string, string>>(new Map());
 
     useImperativeHandle(ref, () => ({
         menubutton: menubuttonRef.current,
         topbarmenu: topbarmenuRef.current,
         topbarmenubutton: topbarmenubuttonRef.current
     }));
+
+    function onFileSelected(filename: string, displayAsJson: boolean) {
+        sp.chosenView = filename;
+    }
+
+    function onPackaeUploaded() {
+        console.log('Package uploaded');
+        setFiles(sp.files);
+        onFileSelected("<Analysis>", false);
+    }
 
     return (
         <div className="layout-topbar">
@@ -26,10 +40,14 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                 <span className="layout-topbar-tooltip" title="Wiser Home Integrated Support Package Reader">WHISPR</span>
             </Link>
 
-            <button ref={topbarmenubuttonRef} type="button" className="p-link layout-topbar-menu-button layout-topbar-button" onClick={showProfileSidebar}>
-                <i className="pi pi-ellipsis-v" />
-            </button>
+            <div className="col-2">
+                <UploadSupportPackage onUploadComplete={onPackaeUploaded}/>
+            </div>
+            <div className="layout-topbar-icons">
+                <FilePicker files={files} onFileSelected={onFileSelected}/>
+            </div>
 
+{/*             
             <div ref={topbarmenuRef} className={classNames('layout-topbar-menu', { 'layout-topbar-menu-mobile-active': layoutState.profileSidebarVisible })}>
                 <button type="button" className="p-link layout-topbar-button">
                     <i className="pi pi-calendar"></i>
@@ -45,7 +63,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                         <span>Settings</span>
                     </button>
                 </Link>
-            </div>
+            </div> */}
         </div>
     );
 });

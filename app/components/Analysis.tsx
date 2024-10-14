@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
+import { Tree, TreeCheckboxSelectionKeys, TreeMultipleSelectionKeys } from 'primereact/tree';
 import { TreeTable, TreeTableSelectionKeysType } from 'primereact/treetable';
 import { Column } from 'primereact/column';
 import { TreeNode } from 'primereact/treenode';
-import UploadSupportPackage from '../../../components/UploadSupportPackage';
-import { SupportPackageContext, SupportPackageProps } from '../../../api/SupportPackage';
+import { SupportPackageContext, SupportPackageProps } from '../api/SupportPackage';
 
 function GetFileTypeFromFilename(filename: string): string {
     const parts = filename.split('.');
@@ -43,7 +43,7 @@ function GetPrettyFileSize(size: number): string {
 
 function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[] {
     const files: TreeNode[] = [];
-    Array.from(sp.files.entries()).forEach(([filename, content]) => {
+    sp.files.entries().forEach(([filename, content]) => {
         const node: TreeNode = {
             key: filename,
             data: {
@@ -57,35 +57,24 @@ function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[
     return files;
 }
 
-const UploadPage = () => {
+const Analysis = () => {
     const [files2, setFiles2] = useState<TreeNode[]>([]);
     const SupportPackage = useContext(SupportPackageContext);
 
-    const onUploadComplete = () => {
-        setFiles2(GenerateTableDataFromSupportPackage(SupportPackage));
-    };
-
     useEffect(() => {
-        console.log("SupportPackage.updateCounter: ", SupportPackage.updateCounter);
-    }, [SupportPackage.updateCounter]);
+        setFiles2(GenerateTableDataFromSupportPackage(SupportPackage));
+    }, [SupportPackage]);
 
     return (
-        <div className="grid">
-            <div className="col-12">
-                <UploadSupportPackage onUploadComplete={onUploadComplete}/>
-            </div>
-            <div className="col-12">
-                <div className="card">
-                    <h5>Support Package Analysis</h5>
-                    <TreeTable value={files2}>
-                        <Column field="name" header="Name" expander />
-                        <Column field="size" header="Size" />
-                        <Column field="type" header="Type" />
-                    </TreeTable>
-                </div>
-            </div>
+        <div className="card">
+            <h5>Support Package Analysis</h5>
+            <TreeTable value={files2}>
+                <Column field="name" header="Name" expander />
+                <Column field="size" header="Size" />
+                <Column field="type" header="Type" />
+            </TreeTable>
         </div>
     );
 };
 
-export default UploadPage;
+export default Analysis;

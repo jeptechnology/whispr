@@ -1,7 +1,7 @@
 import React from "react";
 import { useContext } from "react"; 
 import { LazyLog } from "@melloware/react-logviewer";
-import { SupportPackageContext } from "../../../api/SupportPackage";
+import { SupportPackageContext } from "../api/SupportPackage";
 
 // define the LogViewer component props
 export interface LogViewerProps {
