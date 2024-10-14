@@ -48,7 +48,7 @@ export interface SupportPackageProps {
    updateCounter: number;
 }   
 
-function DecodeLogfile(filename: string, contents: Uint8Array<ArrayBufferLike>): string
+function DecodeLogfile(filename: string, contents: Uint8Array): string
 {
    // if the filename is of the form: log/<name>/container.log.n (where n is a number) then we need to decode it as a protobuf message
    if (filename.startsWith('logs/') && filename.search('/container.log') > 0)
@@ -267,7 +267,7 @@ async function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder:
    // We now need to concatenate them into a single file
    // They should be in the format of a protobuf message of type LogEntry
    // They should be concatenated in order of their sequence number, startng with the oldest which will be the highest number
-   const logNames = sp.files.keys()
+   const logNames = Array.from(sp.files.keys())
                       .filter((key) => key.startsWith(logFolder + '/container.log.'));
    const partialLogFilenames = Array.from(logNames);
 
@@ -306,9 +306,9 @@ function ConcatenateAllLocalLogs(sp: SupportPackageProps)
 {
    // First we should find all potential containers
    // We need to search for all files of the name 'log/<name>/container.log'
-   const containerNames = sp.files.keys()
-                                  .filter(fn => fn.startsWith('logs/') && fn.endsWith('/container.log'))
-                                  .map(fn => fn.split('/')[1]);
+   const containerNames = Array.from(sp.files.keys())
+                                     .filter(fn => fn.startsWith('logs/') && fn.endsWith('/container.log'))
+                                     .map(fn => fn.split('/')[1]);
   
    console.log("Found containers: ", containerNames);
 
@@ -461,7 +461,7 @@ async function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: strin
 
 async function CreateLogDB(sp: SupportPackageProps)
 {
-   const logFiles = sp.files.keys().filter(fn => fn.endsWith('.log'));
+   const logFiles = Array.from(sp.files.keys()).filter(fn => fn.endsWith('.log'));
 
    // Read all log files and create a log structure
    logFiles.forEach(async (logFile) => {

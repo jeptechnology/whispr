@@ -1,4 +1,4 @@
-export default function parseTar(input: Uint8Array, onFile: (file: TarFile<Uint8Array<ArrayBufferLike>>) => void, onCompletion?: () => void) {
+export default function parseTar(input: Uint8Array, onFile: (file: TarFile<Uint8Array>) => void, onCompletion?: () => void) {
     const noOfBlocks = input.byteLength / 512;
     {
         let blockIdx = 0;
