@@ -1,9 +1,7 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
-import { Tree, TreeCheckboxSelectionKeys, TreeMultipleSelectionKeys } from 'primereact/tree';
 import { TreeTable, TreeTableSelectionKeysType } from 'primereact/treetable';
 import { Column } from 'primereact/column';
-import { NodeService } from '../../../../demo/service/NodeService';
 import { TreeNode } from 'primereact/treenode';
 import UploadSupportPackage from './UploadSupportPackage';
 import { SupportPackageContext, SupportPackageProps } from '../../../api/SupportPackage';

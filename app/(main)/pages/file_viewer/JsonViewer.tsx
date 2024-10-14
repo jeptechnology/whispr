@@ -3,7 +3,9 @@
 import React from "react";
 import { useContext } from "react"; 
 import { SupportPackageContext } from "../../../api/SupportPackage";
-import ReactJson from '@microlink/react-json-view'
+import dynamic from 'next/dynamic';
+
+const ReactJson = dynamic(() => import('@microlink/react-json-view'), { ssr: false });
 
 // define the JsonViewer component props
 export interface JsonViewerProps {
