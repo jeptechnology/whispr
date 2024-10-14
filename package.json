@@ -1,6 +1,6 @@
 {
-  "name": "sakai-react",
-  "version": "10.1.0",
+  "name": "whispr",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

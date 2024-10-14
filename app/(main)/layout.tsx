@@ -6,7 +6,7 @@ interface AppLayoutProps {
 }
 
 export const metadata: Metadata = {
-    title: 'WhispR',
+    title: 'WHISPR',
     description: 'The ultimate collection of design-agnostic, flexible and accessible React UI Components.',
     robots: { index: false, follow: false },
     viewport: { initialScale: 1, width: 'device-width' },

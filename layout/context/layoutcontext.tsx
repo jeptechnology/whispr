@@ -10,7 +10,7 @@ export const LayoutProvider = ({ children }: ChildContainerProps) => {
         menuMode: 'static',
         colorScheme: 'dark',
         theme: 'lara-dark-teal',
-        scale: 8
+        scale: 12
     });
 
     const [layoutState, setLayoutState] = useState<LayoutState>({
