@@ -21,12 +21,7 @@ const FilePicker = ({ onFileSelected }: FilePickerProps) => {
       setSelectedFile(filename);
 
       if (onFileSelected) {
-         const displayAsJson = filename.endsWith(" [json]");
-         if (displayAsJson)
-         {
-            filename = filename.replace(" [json]", "");
-         }
-         onFileSelected(filename, displayAsJson);
+         onFileSelected(filename, filename.endsWith(".json"));
       }
     }
 
@@ -34,14 +29,8 @@ const FilePicker = ({ onFileSelected }: FilePickerProps) => {
       console.log("Files: ", files);
       let options = ["<All Logs>", "<Analysis>"];
 
-      Object.keys(files ? files : {}).forEach((filename) => {
-        
+      Object.keys(files ? files : {}).forEach((filename) => {       
         options.push(filename);
-
-        // if this is JSON, add another option to display as JSON
-        if (filename.endsWith(".json")) {
-          options.push(filename + " [json]");
-        }
       });
 
 

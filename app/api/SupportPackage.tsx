@@ -100,7 +100,18 @@ function DecompressSupportPackage(sp: SupportPackageProps, fileContents: Uint8Ar
          }
          else
          {
-            createFile(sp, availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
+            // if the filename ends in .json, then we should parse it as JSON and pretty print it
+            if (availableFile.name.endsWith('.json'))
+            {
+               console.log('File is a .json file, attempting to parse');
+               const jsonContents = JSON.stringify(JSON.parse(DecodeLogfile(availableFile.name, availableFile.contents)), null, 3);               
+               createFile(sp, availableFile.name, jsonContents);
+            }
+            else
+            {
+               // otherwise we will just save the file as a string
+               createFile(sp, availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
+            }
          }      
       }, () => {
          console.log('All files parsed');              
@@ -571,9 +582,9 @@ function PostProcessSupportPackage(sp: SupportPackageProps, contents: string)
 
 function ProcessFilteredLog(sp: SupportPackageProps)
 {
-   if (sp.filter.files.length === 1)
+   // if we have one file selected and the file ends in .json, then we should show the JSON contents
+   if (sp.filter.files.length === 1 && sp.filter.files[0].endsWith('.json'))
    {
-      // if we have only one file selected, then we should show that file
       const filename = sp.filter.files[0];
       sp.filteredLog = sp.files[filename];
       return;

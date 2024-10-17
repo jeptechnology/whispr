@@ -26,7 +26,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
         
         console.log('AppTopbar.onFileSelected: filename=', filename, ' displayAsJson=', displayAsJson);
 
-        if (filename === 'All') {
+        if (filename === '<All Logs>') {
             // if filename == "All" then clear the filter by setting files to an empty set
             dispatch(applyFilter({...filter, files: []}));
         }
