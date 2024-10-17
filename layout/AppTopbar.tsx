@@ -1,21 +1,21 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from 'next/link';
-import { classNames } from 'primereact/utils';
-import React, { forwardRef, useContext, useState, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { AppTopbarRef } from '@/types';
-import { LayoutContext } from './context/layoutcontext';
 import UploadSupportPackage from '@/app/components/UploadSupportPackage';
 import FilePicker from '../app/components/FilePicker';
-import { SupportPackageContext } from '../app/api/SupportPackage';
+import { SupportPackageProps } from '@/app/api/SupportPackage';
+import { useDispatch, useSelector } from 'react-redux';
+import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
-    const { layoutConfig, layoutState, onMenuToggle, showProfileSidebar } = useContext(LayoutContext);
-    const sp = useContext(SupportPackageContext);
     const menubuttonRef = useRef(null);
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
-    const [files, setFiles] = useState<Map<string, string>>(new Map());
+    const files = useSelector((state: SupportPackageProps) => state.files);
+    const filter = useSelector((state: SupportPackageProps) => state.filter);
+    const dispatch = useDispatch();
 
     useImperativeHandle(ref, () => ({
         menubutton: menubuttonRef.current,
@@ -24,13 +24,16 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     }));
 
     function onFileSelected(filename: string, displayAsJson: boolean) {
-        sp.chosenView = filename;
-    }
-
-    function onPackaeUploaded() {
-        console.log('Package uploaded');
-        setFiles(sp.files);
-        onFileSelected("<Analysis>", false);
+        
+        if (filename === 'All') {
+            // if filename == "All" then clear the filter by setting files to an empty set
+            dispatch(applyFilter({...filter, files: new Set()}));
+        }
+        else
+        {
+            // if displayAsJson is true, then set the filter to display the log as JSON
+            dispatch(applyFilter({...filter, files: new Set([filename]), displayAsJson}));
+        }
     }
 
     return (
@@ -41,10 +44,10 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
             </Link>
 
             <div className="col-2">
-                <UploadSupportPackage onUploadComplete={onPackaeUploaded}/>
+                <UploadSupportPackage/>
             </div>
             <div className="layout-topbar-icons">
-                <FilePicker files={files} onFileSelected={onFileSelected}/>
+                <FilePicker onFileSelected={onFileSelected}/>
             </div>
 
 {/*             

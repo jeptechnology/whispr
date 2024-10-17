@@ -1,17 +1,34 @@
 'use client';
 
-import React, { useRef, useState, useContext } from 'react';
+import React, { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '@/app/store'; // Assuming you have this custom hook defined in your store
+import { AppDispatch, RootState } from '@/app/store'; // Assuming you have these types defined in your store
+import { uploadSupportPackage, applyFilter, SupportPackageProps } from '@/app/api/SupportPackage';
 import { Toast } from 'primereact/toast';
 import { FileUpload, FileUploadHeaderTemplateOptions, FileUploadSelectEvent, FileUploadHandlerEvent} from 'primereact/fileupload';
 import { ProgressBar } from 'primereact/progressbar';
 import { Tooltip } from 'primereact/tooltip';
-import { SupportPackageContext } from '../api/SupportPackage';
 
-export default function UploadSupportPackage(props: UploadSupportPackageProps) {
+export default function UploadSupportPackage() {
     const toast = useRef<Toast>(null);
+    const files = useSelector((state: SupportPackageProps ) => state.files);
     const [totalSize, setTotalSize] = useState(0);
-    const fileUploadRef = useRef<FileUpload>(null);
-    const supportPackage = useContext(SupportPackageContext);
+    const dispatch = useAppDispatch();
+
+    interface UploadPackageThunk {
+        (file: File): (dispatch: AppDispatch, getState: () => RootState) => void;
+    }
+
+    const uploadPackageThunk: UploadPackageThunk = (file: File) => (dispatch, getState) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            // reader.result will be a base64 encoded string
+            const fileContents = reader.result as string;
+            dispatch(uploadSupportPackage(fileContents));
+        };
+        reader.readAsDataURL(file);
+    };
 
     const onTemplateSelect = (e: FileUploadSelectEvent) => {
         let file = e.files[0];
@@ -25,55 +42,15 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
             return;
         }
 
-        supportPackage.uploadSupportPackage(file).then(() => {
-            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Support Package Uploaded' });
-            props.onUploadComplete();
-        }).catch((error) => {
-            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Support Package Upload Failed' });
-        }).finally(() => {
-            fileUploadRef.current?.clear();
-            setTotalSize(0);
-        });
-    };
+        console.log('Support Package Uploaded: ', file.name);
 
-    const onTemplateClear = () => {
-        setTotalSize(0);
-    };
-
-    const headerTemplate = (options: FileUploadHeaderTemplateOptions) => {
-        const { className, chooseButton } = options;
-        const value = totalSize / 100000;
-        const formatedValue = fileUploadRef && fileUploadRef.current ? fileUploadRef.current.formatSize(totalSize) : '0 B';
-
-        return (
-            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
-                {chooseButton}
-                <div className="flex align-items-center gap-3 ml-auto">
-                    <span>{formatedValue}</span>
-                    <ProgressBar value={value} showValue={false} style={{ width: '10rem', height: '12px' }}></ProgressBar>
-                </div>
-            </div>
-        );
-    };
-
-    const emptyTemplate = () => {
-        // if supportPackage is set, return an empty div
-        if (supportPackage.entries.length > 0) {
-            return <div></div>;
+        // check that the file is a tarball
+        if (file.name.split('.').pop() !== 'tgz') {
+           return Promise.reject('Please upload a .tgz file');      
         }
 
-        return (
-            <div className="flex align-items-center flex-column">
-                <i className="pi pi-image mt-3 p-5" style={{ fontSize: '5em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)' }}></i>
-                <span style={{ fontSize: '1.2em', color: 'var(--text-color-secondary)' }} className="my-5">
-                    Drag and Drop WiserHome Support Packages Here
-                </span>
-            </div>
-        );
+        dispatch(uploadPackageThunk(file));
     };
-
-    const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'custom-choose-btn p-button-rounded p-button-outlined' };
-    const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'custom-cancel-btn p-button-rounded p-button-outlined' };
 
     return (
         <div>
@@ -83,7 +60,7 @@ export default function UploadSupportPackage(props: UploadSupportPackageProps) {
             <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
             <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
-            <FileUpload ref={fileUploadRef} 
+            <FileUpload 
                 // url="/api/upload" 
                 customUpload
                 mode="basic"

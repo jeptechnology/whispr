@@ -3,8 +3,10 @@
 import React from "react";
 import { useContext } from "react"; 
 import dynamic from 'next/dynamic';
+import { useDispatch, useSelector } from 'react-redux';
+import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
+import { SupportPackageProps } from "@/app/api/SupportPackage";
 
-import { SupportPackageContext } from "../api/SupportPackage";
 const ReactJson = dynamic(() => import('@microlink/react-json-view'), { ssr: false });
 
 // define the JsonViewer component props
@@ -15,7 +17,7 @@ export interface JsonViewerProps {
 
 const JsonViewer = (props: JsonViewerProps ) => {
 
-    const { files } = useContext(SupportPackageContext);
+    const files = useSelector((state: SupportPackageProps) => state.files);
 
     function ParseJsonFile(): any {
         if (!props.filename) {
