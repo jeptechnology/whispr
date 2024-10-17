@@ -474,22 +474,25 @@ function CreateLogDB(sp: SupportPackageProps)
    sp.entries.forEach((entry, index) => {
 
       // componentMap
-      if (!(entry.component in Object.keys(sp.componentMap)))
+      if (!(entry.component in sp.componentMap))
       {
+         console.log('Adding component to componentMap: ', entry.component);
          sp.componentMap[entry.component] = [];
       }
       sp.componentMap[entry.component].push(index);
 
       // severity
-      if (!(entry.severity in Object.keys(sp.severityMap)))
+      if (!(entry.severity in sp.severityMap))
       {
+         console.log('Adding severity to severityMap: ', entry.severity);
          sp.severityMap[entry.severity] = [];
       }  
       sp.severityMap[entry.severity].push(index);
 
       // files
-      if (!(entry.file in Object.keys(sp.fileMap)))
+      if (!(entry.file in sp.fileMap))
       {
+         console.log('Adding file to fileMap: ', entry.file);
          sp.fileMap[entry.file] = [];
       }
       sp.fileMap[entry.file].push(index);
@@ -538,6 +541,52 @@ function PostProcessSupportPackage(sp: SupportPackageProps, contents: string)
    }
 }
 
+function ProcessFilteredLog(sp: SupportPackageProps)
+{
+   if (sp.filter.files.length === 1)
+   {
+      // if we have only one file selected, then we should show that file
+      const filename = sp.filter.files[0];
+      sp.filteredLog = sp.files[filename];
+      return;
+   }
+
+   let allowedLineIndeces = new Set<number>();
+
+   // for each file in our filter, get the set of log entries
+   if (sp.filter.files.length > 0)
+   {
+      sp.filter.files.forEach((filename) => {
+
+         // note: we need to strip the .log suffix from the filename and any path information
+         filename = filename.split('/').pop()?.split('.').shift() as string;
+
+         if (filename in sp.fileMap)
+         {
+            sp.fileMap[filename].forEach((index) => {
+               allowedLineIndeces.add(index);
+            });
+         }
+      });
+   }
+   else
+   {
+      // if no files are selected, then all log entries are allowed
+      sp.entries.forEach((entry, index) => allowedLineIndeces.add(index));
+   }
+
+   // TODO: Implement the filter for severity and timestamp
+
+   
+   // Finally we can create the filtered log
+   // This should be a concatenation of all the allowed log entries 
+
+   sp.filteredLog = '';
+   allowedLineIndeces.forEach((index) => {
+      sp.filteredLog += sp.entries[index].message + '\n';
+   });
+}
+
 export const supportPackageSlice = createSlice({
    name: 'supportPackage',
    
@@ -567,8 +616,7 @@ export const supportPackageSlice = createSlice({
       applyFilter: (state, action) => {
          console.log('applyFilter:', action.payload);
          state.filter = action.payload;
-         state.filteredLog = "Filtered log not yet implemented";
-         console.log('applyFilter: state=', state);
+         ProcessFilteredLog(state);
       },
       applyChosenView: (state, action) => {
          console.log('Applying chosen view: ', action.payload);

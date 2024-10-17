@@ -4,19 +4,18 @@ import { useAppStore, useAppSelector } from "../hooks";
 
 const LogViewer = () => {
 
-    const store = useAppStore();
     const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
 
-    console.log('LogViewer: filteredLog=', filteredLog);
+    console.log('LogViewer: filteredLog length is ', filteredLog.length);
 
     return (
-        <div>
+        <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
             <LazyLog 
             width={'90vw'}
             caseInsensitive
             enableHotKeys
             enableSearch
-            extraLines={1}
+            // extraLines={1}
             text={filteredLog}                    
             />
         </div>
