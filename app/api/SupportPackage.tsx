@@ -1,11 +1,11 @@
 'use client';
-import { createContext } from 'react';
 import { Severity, getSeverityValueOrDefault, getSeverityDefaultValue } from './Severity';
-import { ChildContainerProps } from '@/types';
 import parseTar from './parseTar';
-import { gunzip, gunzipSync } from 'fflate';
+import { gunzipSync } from 'fflate';
 import DecodeLogs from './DecodeLogs';
 import { ProcessedLogEntry } from './ProcessedLogEntry';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { start } from 'repl';
 
 // SupportPackageProps is an interface that defines the props of the SupportPackage component.
 // There is a map of filenames and their contents as Uint8Arrays.
@@ -13,43 +13,50 @@ import { ProcessedLogEntry } from './ProcessedLogEntry';
 // There a function to export the processed support package as a file to download in the browser.
 export interface SupportPackageProps {
 
-   // Map of filenames and their contents as string.
+   // Set of filenames 
    // NOTE: This means when we are working with binary files, we need to convert them to a string.
-   files: Map<string, string>;
+   files: Record<string, string>;
 
    // These will be sorted by timestamp - which is stored in milliseconds since epoch
    entries : Array<ProcessedLogEntry>;
    
-   // All discovered log components as a Map of component -> Set of log entry indeces
-   components : Map<string, Set<number>>;
+   // All discovered log files as a Map of filename -> Set of log entry indeces
+   fileMap : Record<string, Array<number>>;   
+
+   // All discovered log componentMap as a Map of component -> Set of log entry indeces
+   componentMap : Record<string, Array<number>>;
    
    // All discovered log severities as a Map of severity -> Set of log entry indeces
-   severity: Map<Severity, Set<number>>;
+   severityMap: Record<Severity, Array<number>>;
    
-   // All discovered log files as a Map of filename -> Set of log entry indeces
-   logFileMap : Map<string, Set<number>>;
+   filter: {
+      componentMapeverity: Record<string, string>, // Map of component -> severity
+      files: Array<string>, // Set of filenames to filter by
+      timestampStart: number, // Start of the timestamp range
+      timestampEnd: number, // End of the timestamp range
+   };
 
-   // API to upload a support package from a File. This should return a Promise that resolves when the support package has been processed.
-   uploadSupportPackage: (file: File) => Promise<void>;
+   // Potentially very large blob of text that is the filtered log
+   filteredLog: string; 
 
-   // Function to export the processed support package as a file to download in the browser.
-   exportSupportPackage: () => void;
-
-   // Create a file
-   createFile: (filename: string, contents: string) => void;
-
-   // delete a file
-   deleteFile: (filename: string) => void;
-
-   // search for all files with given prefix:
-   searchFiles: (prefix: string) => string[];
-
-   // updateTime: This is a value that will be updated every time the support package is updated
-   updateCounter: number;
-
-   // chosen view
-   chosenView?: string;
+   // The chosenView is either the name of a file or "<Analysis>" or "<All logs>"
+   chosenView: string;
 }   
+
+function createFile(state: SupportPackageProps, filename: string, contents: string)
+{
+   console.log('Creating file: ', filename, ' with content length: ', contents.length);
+   state.files[filename] = contents;
+}
+
+function deleteFile(state: SupportPackageProps, filename: string)
+{
+   if (filename in state.files)
+   {
+      console.log('Removing file: ', filename);
+      delete state.files[filename];
+   }
+}
 
 function DecodeLogfile(filename: string, contents: Uint8Array): string
 {
@@ -62,27 +69,12 @@ function DecodeLogfile(filename: string, contents: Uint8Array): string
    return new TextDecoder().decode(contents);
 }
 
-async function DecompressSupportPackage(sp: SupportPackageProps, file: File)
+function DecompressSupportPackage(sp: SupportPackageProps, fileContents: Uint8Array)
 {
-   console.log('Support Package Uploaded: ', file.name);
-
-   // check that the file is a tarball
-   if (file.name.split('.').pop() !== 'tgz') {
-      return Promise.reject('Please upload a .tgz file');      
-   }
-
-   // Await the file read to complete
-   const reader = new FileReader();
-   const fileContents = await new Promise<ArrayBuffer>((resolve, reject) => {
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsArrayBuffer(file);
-   });
-
    // get the file contents
    try 
    {
-      const decompressedTarfile = gunzipSync(new Uint8Array(fileContents));
+      const decompressedTarfile = gunzipSync(fileContents);
 
       // now we can parse the tarball
       parseTar(decompressedTarfile, (availableFile) => {
@@ -104,28 +96,27 @@ async function DecompressSupportPackage(sp: SupportPackageProps, file: File)
             // strip the .gz from the filename
             const decompressedFileName = availableFile.name.slice(0, -3);
             console.log('File decompressed. Saving to SupportPackage as ', decompressedFileName);
-            sp.createFile(decompressedFileName, DecodeLogfile(decompressedFileName, decompressedData));
+            createFile(sp, decompressedFileName, DecodeLogfile(decompressedFileName, decompressedData));
          }
          else
          {
-            sp.createFile(availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
+            createFile(sp, availableFile.name, DecodeLogfile(availableFile.name, availableFile.contents));
          }      
       }, () => {
          console.log('All files parsed');              
-         return Promise.resolve();
       });
    }
    catch (err)
    {
-      console.log('Error decompressing support package, assume it is an RTOS support package');
+      console.log('Error decompressing support package:', err, ' - assume it is an RTOS support package');
       // RTOS packages just need to be saved as the file "SupportPackage.txt"
-      sp.createFile('SupportPackage.txt', new TextDecoder().decode(fileContents));
+      createFile(sp, 'SupportPackage.txt', new TextDecoder().decode(fileContents));
    }
 }
 
 function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
 {
-   const fileContent = sp.files.get(inputFilePath);
+   const fileContent = sp.files[inputFilePath];
 
    // if the SupportPackage.txt file does not exist, return
    if (fileContent === undefined)
@@ -179,11 +170,11 @@ function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
             {
                const dbContents = JSON.parse(sectionContents);
                const prettyDbContents = JSON.stringify(dbContents, null, 3);
-               sp.createFile(expectedSection.destinaton, prettyDbContents);
+               createFile(sp, expectedSection.destinaton, prettyDbContents);
             }
             else
             {
-               sp.createFile(expectedSection.destinaton, sectionContents);
+               createFile(sp, expectedSection.destinaton, sectionContents);
             }
          }
       }
@@ -208,11 +199,11 @@ function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
    if (Object.keys(dataModel).length > 0)
    {
       const prettySupportPackageData = JSON.stringify(dataModel, null, 3);
-      sp.createFile('datamodel.json', prettySupportPackageData);
+      createFile(sp, 'datamodel.json', prettySupportPackageData);
    }
 
    // remove the SupportPackage.txt file
-   sp.deleteFile(inputFilePath);
+   deleteFile(sp, inputFilePath);
 
    console.log('Sections have been successfully written to separate files.');
 }
@@ -232,23 +223,29 @@ function ConcatenateOldWiserHomeLogs(sp: SupportPackageProps, logsFolder: string
       }
 
       const logFileToLookFor = logsFolder + logFileName;
-      // if log file exists, copy it to fullLogsWritePath
-      if (sp.files.has(logFileToLookFor))
+
+      // if log file exists, copy it to fullLogsWritePath      
+      try 
       {
-         wiserHomeLogContents += sp.files.get(logFileToLookFor);
-         // delete the log file
-         sp.deleteFile(logFileToLookFor);
+         wiserHomeLogContents += sp.files[logFileToLookFor];
+         // delete the file
+         deleteFile(sp, logFileToLookFor);
       }
+      catch (err)
+      {
+         console.log('Error reading wiser home log file: ', logFileToLookFor, ' - ', err);
+      }
+
    }
 
    // if we have any wiser home logs, save them to the fullLogsWritePath
    if (wiserHomeLogContents.length > 0)
    {
-      sp.createFile(fullLogsWritePath, wiserHomeLogContents);
+      createFile(sp, fullLogsWritePath, wiserHomeLogContents);
    }
 }
 
-async function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder: string, fullLogsWritePath: string)
+function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder: string, fullLogsWritePath: string)
 {
    console.log('Concatenating container logs in folder: ', logFolder);
 
@@ -270,7 +267,8 @@ async function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder:
    // We now need to concatenate them into a single file
    // They should be in the format of a protobuf message of type LogEntry
    // They should be concatenated in order of their sequence number, startng with the oldest which will be the highest number
-   const logNames = Array.from(sp.files.keys())
+   // NOTE: sp.files is a Record<string, string> so we need to convert it to a Map<string, string> to use the .keys() method
+   const logNames = Object.keys(sp.files)
                       .filter((key) => key.startsWith(logFolder + '/container.log.'));
    const partialLogFilenames = Array.from(logNames);
 
@@ -284,24 +282,28 @@ async function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder:
    partialLogFilenames.forEach((partialLogFilename) => {
       console.log('Found container log: ', partialLogFilename);
          // append the contents of the file to the full log contents
-      fullLogContents += sp.files.get(partialLogFilename);
+      fullLogContents += sp.files[partialLogFilename];
       // delete the file
-      sp.deleteFile(partialLogFilename);
+      deleteFile(sp, partialLogFilename);
    });
 
    // There should be one more file called container.log which is the current log file and is not compressed
    const currentLogFile = logFolder + '/container.log';
-   if (sp.files.has(currentLogFile))
+   try
    {
-      fullLogContents += sp.files.get(currentLogFile);
+      fullLogContents += sp.files[currentLogFile];
       // delete the log file
-      sp.deleteFile(currentLogFile);
+      deleteFile(sp, currentLogFile);
+   }
+   catch (err)
+   {
+      console.log('Error reading current container log file: ', currentLogFile, ' - ', err);
    }
 
    // if we have any log contents, save them to the fullLogsWritePath
    if (fullLogContents.length > 0)
    {
-      sp.createFile(fullLogsWritePath, fullLogContents);
+      createFile(sp, fullLogsWritePath, fullLogContents);
    }
 }
 
@@ -309,7 +311,7 @@ function ConcatenateAllLocalLogs(sp: SupportPackageProps)
 {
    // First we should find all potential containers
    // We need to search for all files of the name 'log/<name>/container.log'
-   const containerNames = Array.from(sp.files.keys())
+   const containerNames = Object.keys(sp.files)
                                      .filter(fn => fn.startsWith('logs/') && fn.endsWith('/container.log'))
                                      .map(fn => fn.split('/')[1]);
   
@@ -391,7 +393,7 @@ function DecodeJournalLogEntry(filename: string, line: string): ProcessedLogEntr
    // extract the component
    const componentEnd = line.indexOf(':');
    entry.component = line.substring(0, componentEnd);
-   // Note: Journal components sometimes have a suffix of [id] which we should remove
+   // Note: Journal componentMap sometimes have a suffix of [id] which we should remove
    const idStart = entry.component.indexOf('[');
    if (idStart !== -1)
    {
@@ -428,7 +430,7 @@ function CreateLogEntryFromLine(default_timestamp: number, filename: string, tex
    };
 }
 
-async function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: string)
+function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: string)
 {  
    // The shortFilename should be the name of the file without the path or the suffix
    const shortFilename = filename.split('/').pop()?.split('.').shift() as string;
@@ -436,15 +438,8 @@ async function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: strin
 
    console.log('Ingesting log file: ', filename, ' as ', shortFilename);
 
-   // check the file exists in the sp
-   if (!sp.files.has(filename) || !sp.files.get(filename))
-   {
-      console.log('File not found: ', filename);
-      return;
-   }
-
    // create a Reader for the string contents of the file
-   sp.files.get(filename)?.split('\n').forEach((line) => {
+   sp.files[filename]?.split('\n').forEach((line) => {
 
       if (line === null || line.trim() === '')
       {
@@ -462,13 +457,13 @@ async function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: strin
    });
 }
 
-async function CreateLogDB(sp: SupportPackageProps)
+function CreateLogDB(sp: SupportPackageProps)
 {
-   const logFiles = Array.from(sp.files.keys()).filter(fn => fn.endsWith('.log'));
+   const logFiles = Object.keys(sp.files).filter(fn => fn.endsWith('.log'));
 
    // Read all log files and create a log structure
-   logFiles.forEach(async (logFile) => {
-      await IngestTextualLogFileToDB(sp, logFile);
+   logFiles.forEach((logFile) => {
+      IngestTextualLogFileToDB(sp, logFile);
    });
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
@@ -478,17 +473,29 @@ async function CreateLogDB(sp: SupportPackageProps)
    console.log('Creating searchable log maps...');
    sp.entries.forEach((entry, index) => {
 
-      // components
-      if (!sp.components.has(entry.component)) sp.components.set(entry.component, new Set());
-      sp.components.get(entry.component)?.add(index);
+      // componentMap
+      if (!(entry.component in sp.componentMap))
+      {
+         console.log('Adding component to componentMap: ', entry.component);
+         sp.componentMap[entry.component] = [];
+      }
+      sp.componentMap[entry.component].push(index);
 
       // severity
-      if (!sp.severity.has(entry.severity)) sp.severity.set(entry.severity, new Set());
-      sp.severity.get(entry.severity)?.add(index);
+      if (!(entry.severity in sp.severityMap))
+      {
+         console.log('Adding severity to severityMap: ', entry.severity);
+         sp.severityMap[entry.severity] = [];
+      }  
+      sp.severityMap[entry.severity].push(index);
 
       // files
-      if (!sp.logFileMap.has(entry.file)) sp.logFileMap.set(entry.file, new Set());
-      sp.logFileMap.get(entry.file)?.add(index);
+      if (!(entry.file in sp.fileMap))
+      {
+         console.log('Adding file to fileMap: ', entry.file);
+         sp.fileMap[entry.file] = [];
+      }
+      sp.fileMap[entry.file].push(index);
    });  
 
    console.log('Searchable log maps have been created.');
@@ -503,11 +510,17 @@ async function CreateLogDB(sp: SupportPackageProps)
 //
 // @param source_file - the full path to the source file which should be a tar.gz file downloaded from the Wiser One Portal
 // @param destination_dir - the full path to the destination directory where the decompressed files will be stored
-async function PostProcessSupportPackage(sp: SupportPackageProps, source_file: File)
+function PostProcessSupportPackage(sp: SupportPackageProps, contents: string)
 {
    try 
-   {  
-      await DecompressSupportPackage(sp, source_file);
+   {
+      // first, we need to decode our base64 encoded string into a Uint8Array
+      // NOTE: That the contents begin with something like this: "data:application/gzip;base64,H4sIAAAAAAAACw=="
+      // We need to strip that out...
+      const base64Contents = contents.split(',')[1];
+      const binaryContents = Buffer.from(base64Contents, 'base64');
+            
+      DecompressSupportPackage(sp, binaryContents);
       
       console.log('Support package has been decompressed, attempting to process it');
       
@@ -520,10 +533,7 @@ async function PostProcessSupportPackage(sp: SupportPackageProps, source_file: F
       ConcatenateAllLocalLogs(sp);
    
       console.log('Attempting to create a log structure from all files in /logs folder');
-      await CreateLogDB(sp);
-
-      // increment the update counter
-      sp.updateCounter += 1;
+      CreateLogDB(sp);
    }
    catch (err)
    {
@@ -531,40 +541,91 @@ async function PostProcessSupportPackage(sp: SupportPackageProps, source_file: F
    }
 }
 
+function ProcessFilteredLog(sp: SupportPackageProps)
+{
+   if (sp.filter.files.length === 1)
+   {
+      // if we have only one file selected, then we should show that file
+      const filename = sp.filter.files[0];
+      sp.filteredLog = sp.files[filename];
+      return;
+   }
 
-// Create the context
-export const SupportPackageContext = createContext({} as SupportPackageProps);
+   let allowedLineIndeces = new Set<number>();
 
-export const SupportPackageProvider = ({ children }: ChildContainerProps) => {
+   // for each file in our filter, get the set of log entries
+   if (sp.filter.files.length > 0)
+   {
+      sp.filter.files.forEach((filename) => {
 
-   // The SupportPackageProvider will implement all the functions of the SupportPackageProps interface.
+         // note: we need to strip the .log suffix from the filename and any path information
+         filename = filename.split('/').pop()?.split('.').shift() as string;
 
-   const value: SupportPackageProps = {
-      files: new Map<string, string>(),
-      entries: new Array<ProcessedLogEntry>(),
-      components: new Map<string, Set<number>>(),
-      severity: new Map<Severity, Set<number>>(),
-      logFileMap: new Map<string, Set<number>>(),
-      updateCounter: 0,
-      uploadSupportPackage: (file: File) => {
-         return PostProcessSupportPackage(value, file);
+         if (filename in sp.fileMap)
+         {
+            sp.fileMap[filename].forEach((index) => {
+               allowedLineIndeces.add(index);
+            });
+         }
+      });
+   }
+   else
+   {
+      // if no files are selected, then all log entries are allowed
+      sp.entries.forEach((entry, index) => allowedLineIndeces.add(index));
+   }
+
+   // TODO: Implement the filter for severity and timestamp
+
+   
+   // Finally we can create the filtered log
+   // This should be a concatenation of all the allowed log entries 
+
+   sp.filteredLog = '';
+   allowedLineIndeces.forEach((index) => {
+      sp.filteredLog += sp.entries[index].message + '\n';
+   });
+}
+
+export const supportPackageSlice = createSlice({
+   name: 'supportPackage',
+   
+   initialState: {
+      files:        {} as Record<string, string>,        // All discovered files in the support package as 
+      
+      entries:      new Array<ProcessedLogEntry>(),   // All discovered log entries and their metadata
+      fileMap:      {} as Record<string, Array<number>>,   // All discovered log files as a Map of filename -> Set of log entry indeces
+      componentMap: {} as Record<string, Array<number>>,   // All discovered log componentMap as a Map of component -> Set of log entry indeces
+      severityMap:  {} as Record<Severity, Array<number>>,   // All discovered log severities as a Map of severity -> Set of log entry indeces
+
+      filter: {
+         componentMapeverity: {}, // Map of component -> severity
+         files: new Array<string>(), // Set of filenames to filter by
+         timestampStart: 0, // Start of the timestamp range
+         timestampEnd: 0, // End of the timestamp range
       },
-      exportSupportPackage: () => {
-         throw new Error('Function not implemented.');
+
+      filteredLog: "", // Potentially very large blob of text that is the filtered log
+      chosenView: "<Analysis>", // The chosenView is either the name of a file or "<Analysis>" or "<All logs>"
+   },
+   
+   reducers: {
+      uploadSupportPackage: (state, action: PayloadAction<string>) => {
+         PostProcessSupportPackage(state, action.payload);
       },
-      createFile: (filename: string, contents: string) => {
-         console.log('Creating file: ', filename, ' with content length: ', contents.length);
-         value.files.set(filename, contents);
+      applyFilter: (state, action) => {
+         console.log('applyFilter:', action.payload);
+         state.filter = action.payload;
+         ProcessFilteredLog(state);
       },
-      deleteFile: (filename: string) => {
-         console.log('Removing file: ', filename);
-         value.files.delete(filename);
-      },
-      searchFiles: (prefix: string) => {
-         return Array.from(value.files.keys()).filter((key) => key.startsWith(prefix));
+      applyChosenView: (state, action) => {
+         console.log('Applying chosen view: ', action.payload);
+         state.chosenView = action.payload;
       }
-   };
+   }
+})
  
-   return <SupportPackageContext.Provider value={value}>{children}</SupportPackageContext.Provider>;
-};
-
+// Action creators are generated for each case reducer function
+export const { uploadSupportPackage, applyFilter, applyChosenView } = supportPackageSlice.actions
+ 
+export default supportPackageSlice.reducer

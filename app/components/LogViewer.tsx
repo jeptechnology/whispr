@@ -1,30 +1,24 @@
 import React from "react";
-import { useContext } from "react"; 
 import { LazyLog } from "@melloware/react-logviewer";
-import { SupportPackageContext } from "../api/SupportPackage";
+import { useAppStore, useAppSelector } from "../hooks";
 
-// define the LogViewer component props
-export interface LogViewerProps {
-    filename?: string;
-}
+const LogViewer = () => {
 
+    const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
 
-const LogViewer = (props: LogViewerProps ) => {
+    console.log('LogViewer: filteredLog length is ', filteredLog.length);
 
-    const sp = useContext(SupportPackageContext);
-
-    return props.filename ? 
-    (
-        <LazyLog 
+    return (
+        <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
+            <LazyLog 
+            width={'90vw'}
             caseInsensitive
             enableHotKeys
             enableSearch
-            extraLines={1}
-            // height={1600}
-            text={sp.files.get(props.filename)}                    
+            // extraLines={1}
+            text={filteredLog}                    
             />
-    ) : (
-        <div/>
+        </div>
     );
 };
 

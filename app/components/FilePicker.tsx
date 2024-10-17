@@ -1,45 +1,52 @@
 'use client';
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react"; 
 import { Dropdown } from "primereact/dropdown";
+import { useAppSelector } from "../hooks";
 
 // define the FilePicker component props
 export interface FilePickerProps {
-   files: Map<string, string>;
    onFileSelected?: (filename: string, displayAsJson: boolean) => void;
 }
 
-const FilePicker = (props: FilePickerProps) => {
+const FilePicker = ({ onFileSelected }: FilePickerProps) => {
 
     const [selectedFile, setSelectedFile] = useState<string>();
+    const [options, setOptions] = useState<string[]>();
+    const files = useAppSelector((state) => state.supportPackage.files);
 
     function onFileSelect(e: any) {
       let filename = e.value;   
       setSelectedFile(filename);
 
-      if (props.onFileSelected) {
+      if (onFileSelected) {
          const displayAsJson = filename.endsWith(" [json]");
          if (displayAsJson)
          {
             filename = filename.replace(" [json]", "");
          }
-         props.onFileSelected(filename, displayAsJson);
+         onFileSelected(filename, displayAsJson);
       }
     }
 
-    // map the files to the dropdown options
-    const options: string[] = props.files.size === 0 ? [] : ["<Analysis>", "<All logs>"];
+    useEffect(() => {
+      console.log("Files: ", files);
+      let options = ["<All Logs>", "<Analysis>"];
 
-    props.files.forEach((_, filename) => {
+      Object.keys(files ? files : {}).forEach((filename) => {
         
-      options.push(filename);
+        options.push(filename);
 
-      // if this is JSON, add another option to display as JSON
-      if (filename.endsWith(".json")) {
-        options.push(filename + " [json]");
-      }
-    });
+        // if this is JSON, add another option to display as JSON
+        if (filename.endsWith(".json")) {
+          options.push(filename + " [json]");
+        }
+      });
+
+
+      setOptions(options);
+    }, [files]);
 
     return (
       <Dropdown value={selectedFile} options={options} placeholder="Select a view" onChange={onFileSelect} />

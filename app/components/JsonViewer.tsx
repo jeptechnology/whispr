@@ -1,10 +1,10 @@
 'use client';
 
 import React from "react";
-import { useContext } from "react"; 
 import dynamic from 'next/dynamic';
+import { useAppSelector } from "../hooks";
+import { SupportPackageProps } from "@/app/api/SupportPackage";
 
-import { SupportPackageContext } from "../api/SupportPackage";
 const ReactJson = dynamic(() => import('@microlink/react-json-view'), { ssr: false });
 
 // define the JsonViewer component props
@@ -15,13 +15,13 @@ export interface JsonViewerProps {
 
 const JsonViewer = (props: JsonViewerProps ) => {
 
-    const { files } = useContext(SupportPackageContext);
+    const files = useAppSelector((state) => state.supportPackage.files);
 
     function ParseJsonFile(): any {
         if (!props.filename) {
             return {};
         }
-        const content = files.get(props.filename);
+        const content = files[props.filename];
         if (content === undefined) {
             return {};
         }

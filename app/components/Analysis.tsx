@@ -1,10 +1,12 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
-import { Tree, TreeCheckboxSelectionKeys, TreeMultipleSelectionKeys } from 'primereact/tree';
 import { TreeTable, TreeTableSelectionKeysType } from 'primereact/treetable';
 import { Column } from 'primereact/column';
 import { TreeNode } from 'primereact/treenode';
-import { SupportPackageContext, SupportPackageProps } from '../api/SupportPackage';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
+import { SupportPackageProps } from "@/app/api/SupportPackage";
+
 
 function GetFileTypeFromFilename(filename: string): string {
     const parts = filename.split('.');
@@ -41,14 +43,15 @@ function GetPrettyFileSize(size: number): string {
     }
 }
 
-function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[] {
+function GenerateTableDataFromSupportPackage(fileMap: Record<string, string>): TreeNode[] {
     const files: TreeNode[] = [];
-    Array.from(sp.files.entries()).forEach(([filename, content]) => {
+    // for each key in the fileMap, create a TreeNode
+    Object.keys(fileMap).forEach((filename) => {
         const node: TreeNode = {
             key: filename,
             data: {
                 name: filename,
-                size: GetPrettyFileSize(content.length),
+                size: GetPrettyFileSize(fileMap[filename]?.length),
                 type: GetFileTypeFromFilename(filename)
             }
         };
@@ -59,11 +62,11 @@ function GenerateTableDataFromSupportPackage(sp: SupportPackageProps): TreeNode[
 
 const Analysis = () => {
     const [files2, setFiles2] = useState<TreeNode[]>([]);
-    const SupportPackage = useContext(SupportPackageContext);
-
+    const fileMap = useAppSelector((state) => state.supportPackage.files);
+    
     useEffect(() => {
-        setFiles2(GenerateTableDataFromSupportPackage(SupportPackage));
-    }, [SupportPackage]);
+        setFiles2(GenerateTableDataFromSupportPackage(fileMap));
+    }, [fileMap]);
 
     return (
         <div className="card">
