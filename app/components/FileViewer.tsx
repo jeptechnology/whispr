@@ -23,7 +23,7 @@ const FileViewer = () => {
             </div>
             <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
                 { selectedFile ? 
-                        <LogViewer filename={selectedFile}/>
+                        <LogViewer/>
                 : (
                     <div/>
                 )}
