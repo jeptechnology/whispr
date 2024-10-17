@@ -371,11 +371,11 @@ function DecodeWiserHomeLogEntry(file: string, line: string): ProcessedLogEntry
    return entry;
 }
 
-function DecodeJournalLogEntry(filename: string, line: string): ProcessedLogEntry
+function DecodeJournalLogEntry(default_timestamp: number, filename: string, line: string): ProcessedLogEntry
 {
    // Extract the timestamp
    let entry = { 
-      unixtimestamp: 0,
+      unixtimestamp: default_timestamp,
       file: filename,
       severity: getSeverityDefaultValue(),
       component: "",
@@ -456,7 +456,7 @@ function CreateLogEntryFromLine(default_timestamp: number, filename: string, tex
    // Oct 02 07:00:54 WiserHeat05C2D7 component[id]: message text
    else if (filename == "journal")
    {
-      return DecodeJournalLogEntry(filename, text);
+      return DecodeJournalLogEntry(default_timestamp, filename, text);
    }
 
    // TODO: This is a new style log entry which we don't know how to parse yet   
