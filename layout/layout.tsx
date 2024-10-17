@@ -1,14 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
-import { useUnmountEffect } from 'primereact/hooks';
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { classNames } from 'primereact/utils';
 import AppTopbar from './AppTopbar';
 import { LayoutContext } from './context/layoutcontext';
-import { PrimeReactContext } from 'primereact/api';
-import { ChildContainerProps, LayoutState, AppTopbarRef } from '@/types';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { ChildContainerProps, AppTopbarRef } from '@/types';
 
 const Layout = ({ children }: ChildContainerProps) => {
     const { layoutConfig, layoutState, setLayoutState } = useContext(LayoutContext);

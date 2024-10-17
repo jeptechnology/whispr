@@ -564,17 +564,19 @@ export const supportPackageSlice = createSlice({
          PostProcessSupportPackage(state, action.payload);
       },
       applyFilter: (state, action) => {
+         console.log('Applying filter: ', action.payload);
          state.filter = action.payload;
          // update the filtered log
          // TODO: implement this
       },
       applyChosenView: (state, action) => {
+         console.log('Applying chosen view: ', action.payload);
          state.chosenView = action.payload;
       }
    }
 })
  
 // Action creators are generated for each case reducer function
-export const { uploadSupportPackage, applyFilter } = supportPackageSlice.actions
+export const { uploadSupportPackage, applyFilter, applyChosenView } = supportPackageSlice.actions
  
 export default supportPackageSlice.reducer

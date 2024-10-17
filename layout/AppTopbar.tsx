@@ -6,16 +6,16 @@ import { AppTopbarRef } from '@/types';
 import UploadSupportPackage from '@/app/components/UploadSupportPackage';
 import FilePicker from '../app/components/FilePicker';
 import { SupportPackageProps } from '@/app/api/SupportPackage';
-import { useDispatch, useSelector } from 'react-redux';
-import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { uploadSupportPackage, applyFilter, applyChosenView } from '@/app/api/SupportPackage';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     const menubuttonRef = useRef(null);
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
-    const files = useSelector((state: SupportPackageProps) => state.files);
-    const filter = useSelector((state: SupportPackageProps) => state.filter);
-    const dispatch = useDispatch();
+    const files = useAppSelector((state) => state.supportPackage.files);
+    const filter = useAppSelector((state) => state.supportPackage.filter);
+    const dispatch = useAppDispatch();
 
     useImperativeHandle(ref, () => ({
         menubutton: menubuttonRef.current,
@@ -25,14 +25,17 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
 
     function onFileSelected(filename: string, displayAsJson: boolean) {
         
+        console.log('AppTopbar.onFileSelected: filename=', filename, ' displayAsJson=', displayAsJson);
+        dispatch(applyChosenView(filename));
+
         if (filename === 'All') {
             // if filename == "All" then clear the filter by setting files to an empty set
-            dispatch(applyFilter({...filter, files: new Set()}));
+            dispatch(applyFilter({...filter, files: []}));
         }
         else
         {
             // if displayAsJson is true, then set the filter to display the log as JSON
-            dispatch(applyFilter({...filter, files: new Set([filename]), displayAsJson}));
+            dispatch(applyFilter({...filter, files: [filename], displayAsJson}));
         }
     }
 

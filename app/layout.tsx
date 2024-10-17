@@ -6,8 +6,7 @@ import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import '../styles/layout/layout.scss';
 import '../styles/demo/Demos.scss';
-import { store } from './store'
-import { Provider } from 'react-redux'
+import StoreProvider from '../app/StoreProvider'
 import React from 'react';
 
 interface RootLayoutProps {
@@ -23,11 +22,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <body>
                 <React.StrictMode>
                     <PrimeReactProvider>
-                    <Provider store={store}>                
+                    <StoreProvider>                
                     <LayoutProvider>
                             {children}
-                        </LayoutProvider>
-                    </Provider>
+                    </LayoutProvider>
+                    </StoreProvider>
                     </PrimeReactProvider>
                 </React.StrictMode>
             </body>

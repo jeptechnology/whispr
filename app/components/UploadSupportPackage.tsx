@@ -1,18 +1,16 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useAppDispatch } from '@/app/store'; // Assuming you have this custom hook defined in your store
+import { useAppDispatch, useAppSelector } from '@/app/hooks'; // Assuming you have this custom hook defined in your store
 import { AppDispatch, RootState } from '@/app/store'; // Assuming you have these types defined in your store
 import { uploadSupportPackage, applyFilter, SupportPackageProps } from '@/app/api/SupportPackage';
 import { Toast } from 'primereact/toast';
 import { FileUpload, FileUploadHeaderTemplateOptions, FileUploadSelectEvent, FileUploadHandlerEvent} from 'primereact/fileupload';
-import { ProgressBar } from 'primereact/progressbar';
 import { Tooltip } from 'primereact/tooltip';
 
 export default function UploadSupportPackage() {
     const toast = useRef<Toast>(null);
-    const files = useSelector((state: SupportPackageProps ) => state.files);
+    const files = useAppSelector((state) => state.supportPackage.files);
     const [totalSize, setTotalSize] = useState(0);
     const dispatch = useAppDispatch();
 

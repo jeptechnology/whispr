@@ -1,6 +1,6 @@
 import React from "react";
 import { LazyLog } from "@melloware/react-logviewer";
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppSelector } from "../hooks";
 import { SupportPackageProps } from "../api/SupportPackage";
 
 // define the LogViewer component props
@@ -11,7 +11,7 @@ export interface LogViewerProps {
 
 const LogViewer = (props: LogViewerProps ) => {
 
-    const text = useSelector((state: SupportPackageProps) => state.filteredLog);
+    const text = useAppSelector((state) => state.supportPackage.filteredLog);
 
     return props.filename ? 
     (

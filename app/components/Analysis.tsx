@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { TreeTable, TreeTableSelectionKeysType } from 'primereact/treetable';
 import { Column } from 'primereact/column';
 import { TreeNode } from 'primereact/treenode';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
 import { SupportPackageProps } from "@/app/api/SupportPackage";
 
@@ -43,14 +43,15 @@ function GetPrettyFileSize(size: number): string {
     }
 }
 
-function GenerateTableDataFromSupportPackage(fileMap: Map<string, string>): TreeNode[] {
+function GenerateTableDataFromSupportPackage(fileMap: Record<string, string>): TreeNode[] {
     const files: TreeNode[] = [];
-    Array.from(fileMap.entries()).forEach(([filename, content]) => {
+    // for each key in the fileMap, create a TreeNode
+    Object.keys(fileMap).forEach((filename) => {
         const node: TreeNode = {
             key: filename,
             data: {
                 name: filename,
-                size: GetPrettyFileSize(content.length),
+                size: GetPrettyFileSize(fileMap[filename]?.length),
                 type: GetFileTypeFromFilename(filename)
             }
         };
@@ -61,7 +62,7 @@ function GenerateTableDataFromSupportPackage(fileMap: Map<string, string>): Tree
 
 const Analysis = () => {
     const [files2, setFiles2] = useState<TreeNode[]>([]);
-    const fileMap = useSelector((state: SupportPackageProps) => state.files);
+    const fileMap = useAppSelector((state) => state.supportPackage.files);
     
     useEffect(() => {
         setFiles2(GenerateTableDataFromSupportPackage(fileMap));

@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useState } from "react"; 
 import { Dropdown } from "primereact/dropdown";
 import { SupportPackageProps } from '@/app/api/SupportPackage';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppSelector } from "../hooks";
 import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
 
 // define the FilePicker component props
@@ -16,7 +16,7 @@ const FilePicker = ({ onFileSelected }: FilePickerProps) => {
 
     const [selectedFile, setSelectedFile] = useState<string>();
     const [options, setOptions] = useState<string[]>();
-    const files = useSelector((state: SupportPackageProps) => state.files);
+    const files = useAppSelector((state) => state.supportPackage.files);
 
     function onFileSelect(e: any) {
       let filename = e.value;   
