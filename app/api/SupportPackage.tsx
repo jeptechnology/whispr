@@ -341,14 +341,21 @@ function DecodeWiserHomeLogEntry(file: string, line: string): ProcessedLogEntry
    entry.unixtimestamp = new Date(timestamp).getTime();      
    line = line.substring(line.indexOf(']') + 1).trim();
 
-   // extract the component
-   const componentEnd = line.indexOf(']');
-   entry.component = line.substring(1, componentEnd).trim();
+   // extract the component - if there is one.
+   if (line[0] === '[')
+   {
+      const componentEnd = line.indexOf(']');
+      if (componentEnd !== -1)
+      {
+         entry.component = line.substring(1, componentEnd).trim();
+      }
+      line = line.substring(componentEnd + 1).trim();
 
-   // extract the severity
-   const severityStart = line.indexOf('[', componentEnd + 1);
-   const severityEnd = line.indexOf(']', severityStart);
-   entry.severity = getSeverityValueOrDefault(line.substring(severityStart + 1, severityEnd).trim());
+      // extract the severity
+      const severityStart = line.indexOf('[');
+      const severityEnd = line.indexOf(']');
+      entry.severity = getSeverityValueOrDefault(line.substring(severityStart + 1, severityEnd).trim());
+   }
 
    return entry;
 }
@@ -364,28 +371,49 @@ function DecodeJournalLogEntry(filename: string, line: string): ProcessedLogEntr
       message: line, // we should faithfully preserve the whole line here
    };
 
-   // This is a journal log entry of the form:
-   // Oct 02 07:00:54 WiserHeat05C2D7 component[id]: message text
-
-   let timestamp = line.substring(0, 15);
-   // as the timestamp in Journal logs does not contain the timezone, we need to add it
-   timestamp += 'Z';
-   // convert the timestamp to a unix timestamp
-   const date = new Date(timestamp);
-   
-   // if the year is more than 1 years old, then its likely we failed to parse the correct year.
-   // In that case, we should use the current year as the year, unless this would put us in the future, in which case we should use the previous year
-   if (date.getFullYear() < new Date().getFullYear() - 1)
+   if (line[0].match(/[a-z]/i))
    {
-      date.setFullYear(new Date().getFullYear());
-      if (date > new Date())
-      {
-         date.setFullYear(new Date().getFullYear() - 1);
-      }
-   }
+      // This is a journal log entry of the form:
+      // Oct 02 07:00:54 WiserHeat05C2D7 component[id]: message text
 
-   entry.unixtimestamp = date.getTime();
-   line = line.substring(16).trim();
+      let timestamp = line.substring(0, 15);
+      // as the timestamp in Journal logs does not contain the timezone, we need to add it
+      timestamp += 'Z';
+      // convert the timestamp to a unix timestamp
+      const date = new Date(timestamp);
+
+      // if the year is more than 1 years old, then its likely we failed to parse the correct year.
+      // In that case, we should use the current year as the year, unless this would put us in the future, in which case we should use the previous year
+      if (date.getFullYear() < new Date().getFullYear() - 1)
+      {
+         date.setFullYear(new Date().getFullYear());
+         if (date > new Date())
+         {
+            date.setFullYear(new Date().getFullYear() - 1);
+         }
+      }
+      entry.unixtimestamp = date.getTime();     
+
+      // remove the timestamp from the line
+      line = line.substring(16).trim();
+   }
+   // else if the log entry is of the form 1234567890.123456 WiserHeat05C2D7 component[id]: message text
+   // then we need to extract the seconds timestamp from the first 10 characters, and the microseconds from the next 6 characters
+   else if (line[10] === '.')
+   {
+      const timestamp = line.substring(0, 16);
+      const seconds = parseInt(timestamp.substring(0, 10));
+      const microseconds = parseInt(timestamp.substring(11, 16));
+      entry.unixtimestamp = seconds * 1000 + microseconds / 1000;
+
+      // remove the timestamp from the line
+      line = line.substring(17).trim();
+
+      // to make the logs more readable, we will replace the unix timestamp with a human readable Date
+      const date = new Date(entry.unixtimestamp);
+      const dateString = date.toISOString();
+      entry.message = dateString + ' ' + line;
+   }
 
    // remove the prefix of the form WiserHeat05C2D7
    line = line.substring(line.indexOf(' ')).trim();
@@ -415,12 +443,12 @@ function CreateLogEntryFromLine(default_timestamp: number, filename: string, tex
    }
    // else if the line begins with a letter, then it is an old style journal entry of the form: 
    // Oct 02 07:00:54 WiserHeat05C2D7 component[id]: message text
-   else if (text[0].match(/[a-z]/i))
+   else if (filename == "journal")
    {
       return DecodeJournalLogEntry(filename, text);
    }
 
-   // TODO: This is a new style log entry   
+   // TODO: This is a new style log entry which we don't know how to parse yet   
    return { 
       unixtimestamp: default_timestamp, 
       file: filename, 
