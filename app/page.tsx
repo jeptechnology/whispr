@@ -4,8 +4,7 @@ import React, { useContext, useEffect } from "react";
 import LogViewer from "./components/LogViewer"; // For log files
 import JsonViewer from "./components/JsonViewer"; // For json files
 import Analysis from "./components/Analysis";
-import { uploadSupportPackage, applyFilter, applyChosenView } from '@/app/api/SupportPackage';
-import { SupportPackageProps } from "@/app/api/SupportPackage";
+import { applyFilter, applyChosenView } from '@/app/api/SupportPackage';
 import FilePicker from "./components/FilePicker";
 import UploadSupportPackage from "./components/UploadSupportPackage";
 import { useAppDispatch, useAppSelector, useAppStore } from "./hooks";
@@ -21,12 +20,13 @@ const WhisprMainView = () => {
     const chosenView = useAppSelector((state) => state.supportPackage.chosenView);
     const [view, setView] = React.useState<string | null>(null);
     const [displayAsJson, setDisplayAsJson] = React.useState<boolean>(false);
-    const files = useAppSelector((state) => state.supportPackage.files);
+    const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
     const filter = useAppSelector((state) => state.supportPackage.filter);
     const dispatch = useAppDispatch();
 
     useEffect(() => {
         console.log('WhisprMainView.useEffect: chosenView=', chosenView);
+        console.log('filteredLogs=', filteredLog);
         setDisplayAsJson(chosenView?.endsWith(' [json]') ?? false);
         setView(displayAsJson ? chosenView?.slice(0, -7) ?? null : chosenView ?? null);
     }, [chosenView]);
@@ -69,28 +69,18 @@ const WhisprMainView = () => {
             <div className="layout-main-container">
                  <div className="layout-main">
                  <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
-                { chosenView == "<Analysis>" ?
+                {  chosenView == "<Analysis>" ?
                     (
                        <Analysis/>
                     ) 
-                  : chosenView == "<All logs>" ?
-                    (
-                       <div>
-                        <p>This is the all logs view</p>
-                       </div>
-                    )
-                  : chosenView ?
-                    displayAsJson ?
+                  : displayAsJson ?
                     (
                         <JsonViewer filename={view ?? undefined}/>
-                    ) : (
-                        <LogViewer filename={view ?? undefined}/>
+                    ) 
+                  : (
+                        <LogViewer/>
                     )
-                : (
-                    <div>
-                    <p>This is the all logs view</p>
-                   </div>
-              )}
+                }
             </div>            
                     </div>
             </div>

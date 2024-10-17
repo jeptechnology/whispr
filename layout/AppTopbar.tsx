@@ -5,9 +5,8 @@ import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { AppTopbarRef } from '@/types';
 import UploadSupportPackage from '@/app/components/UploadSupportPackage';
 import FilePicker from '../app/components/FilePicker';
-import { SupportPackageProps } from '@/app/api/SupportPackage';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { uploadSupportPackage, applyFilter, applyChosenView } from '@/app/api/SupportPackage';
+import { applyFilter, applyChosenView } from '@/app/api/SupportPackage';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     const menubuttonRef = useRef(null);
@@ -26,7 +25,6 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     function onFileSelected(filename: string, displayAsJson: boolean) {
         
         console.log('AppTopbar.onFileSelected: filename=', filename, ' displayAsJson=', displayAsJson);
-        dispatch(applyChosenView(filename));
 
         if (filename === 'All') {
             // if filename == "All" then clear the filter by setting files to an empty set
@@ -37,6 +35,8 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
             // if displayAsJson is true, then set the filter to display the log as JSON
             dispatch(applyFilter({...filter, files: [filename], displayAsJson}));
         }
+
+        dispatch(applyChosenView(filename));
     }
 
     return (

@@ -5,6 +5,7 @@ import { gunzipSync } from 'fflate';
 import DecodeLogs from './DecodeLogs';
 import { ProcessedLogEntry } from './ProcessedLogEntry';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { start } from 'repl';
 
 // SupportPackageProps is an interface that defines the props of the SupportPackage component.
 // There is a map of filenames and their contents as Uint8Arrays.
@@ -564,10 +565,10 @@ export const supportPackageSlice = createSlice({
          PostProcessSupportPackage(state, action.payload);
       },
       applyFilter: (state, action) => {
-         console.log('Applying filter: ', action.payload);
+         console.log('applyFilter:', action.payload);
          state.filter = action.payload;
-         // update the filtered log
-         // TODO: implement this
+         state.filteredLog = "Filtered log not yet implemented";
+         console.log('applyFilter: state=', state);
       },
       applyChosenView: (state, action) => {
          console.log('Applying chosen view: ', action.payload);

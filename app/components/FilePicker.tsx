@@ -3,9 +3,7 @@
 import React, { useEffect } from "react";
 import { useState } from "react"; 
 import { Dropdown } from "primereact/dropdown";
-import { SupportPackageProps } from '@/app/api/SupportPackage';
 import { useAppSelector } from "../hooks";
-import { uploadSupportPackage, applyFilter } from '@/app/api/SupportPackage';
 
 // define the FilePicker component props
 export interface FilePickerProps {
