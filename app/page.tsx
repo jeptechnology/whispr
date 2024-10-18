@@ -21,7 +21,6 @@ const WhisprMainView = () => {
     const store = useAppStore();
     const chosenView = useAppSelector((state) => state.supportPackage.chosenView);
     const [view, setView] = React.useState<string | null>(null);
-    const [displayAsJson, setDisplayAsJson] = React.useState<boolean>(false);
     const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
     const filter = useAppSelector((state) => state.supportPackage.filter);
     const dispatch = useAppDispatch();
@@ -29,8 +28,7 @@ const WhisprMainView = () => {
     useEffect(() => {
         console.log('WhisprMainView.useEffect: chosenView=', chosenView);
         console.log('filteredLogs=', filteredLog);
-        setDisplayAsJson(chosenView?.endsWith(' [json]') ?? false);
-        setView(displayAsJson ? chosenView?.slice(0, -7) ?? null : chosenView ?? null);
+        setView(chosenView);
     }, [chosenView]);
 
     function onFileSelected(filename: string, displayAsJson: boolean) {
@@ -38,7 +36,7 @@ const WhisprMainView = () => {
         console.log('AppTopbar.onFileSelected: filename=', filename, ' displayAsJson=', displayAsJson);
         dispatch(applyChosenView(filename));
 
-        if (filename === 'All') {
+        if (filename === '<Logs>') {
             // if filename == "All" then clear the filter by setting files to an empty set
             dispatch(applyFilter({...filter, files: []}));
         }
@@ -74,10 +72,9 @@ const WhisprMainView = () => {
     }
 
     // If the chosen view is:
-    // "<Analsys>" - show the <AnalysisViewer> component
-    // "<All logs>" - show the <FilteredLogViewer> component
-    // "<filename> [json]" - show the <JsonViewer> component
-    // "<filename>" - show the <LogViewer> component
+    // "<Summary>" - show the <AnalysisViewer> component
+    // "<Logs>" - show the <FilteredLogViewer> component
+    // "[filename]" - show the <LogViewer> component
     // otherwise show nothing
 
     return (
@@ -85,32 +82,33 @@ const WhisprMainView = () => {
             <div className="layout-topbar">
                 <span className="layout-topbar-tooltip" title="Wiser Home Integrated Support Package Reader">WHISPR</span>
 
-                <div className="col-2">
+                <div className="col-3">
                     <UploadSupportPackage/>
                 </div>
-                <div className="layout-topbar-icons">
+                <div className="col-2">
                     <FilePicker onFileSelected={onFileSelected}/>
                 </div>
-
                 <div className="col-2">
-                    <Calendar value={GetStartTime()} onChange={(e) => applyStartTime(e.value)} showTime hourFormat="24" />
+                    <label>Filters...</label>
                 </div>
-    
-                <div className="col-2">
-                    <Calendar value={GetEndTime()} onChange={(e) => applyEndTime(e.value)} showTime hourFormat="24" />
+                <div className="col-4">
+                    <label> From: </label>
+                    <Calendar id="start-time-calendar" 
+                        value={GetStartTime()} 
+                        onChange={(e) => applyStartTime(e.value)} 
+                        showTime 
+                        hourFormat="24"/>
+                    <label htmlFor="end-time-calendar"> To: </label>
+                    <Calendar id="end-time-calendar" value={GetEndTime()} onChange={(e) => applyEndTime(e.value)} showTime hourFormat="24" />
                 </div>
 
             </div>
             <div className="layout-main-container">
                  <div className="layout-main">
                  <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
-                {  chosenView == "<Analysis>" ?
+                {  chosenView == "<Summary>" ?
                     (
                        <Analysis/>
-                    ) 
-                  : displayAsJson ?
-                    (
-                        <JsonViewer filename={view ?? undefined}/>
                     ) 
                   : (
                         <LogViewer/>

@@ -39,7 +39,7 @@ export interface SupportPackageProps {
    // Potentially very large blob of text that is the filtered log
    filteredLog: string; 
 
-   // The chosenView is either the name of a file or "<Analysis>" or "<All logs>"
+   // The chosenView is either the name of a file or "<Summary>" or "<Logs>"
    chosenView: string;
 }   
 
@@ -469,26 +469,22 @@ function CreateLogEntryFromLine(default_timestamp: number, filename: string, tex
    };
 }
 
-function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: string)
+function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string, contents: string)
 {  
-   // The shortFilename should be the name of the file without the path or the suffix
-   const shortFilename = filename.split('/').pop()?.split('.').shift() as string;
    let default_timestamp = 0;
 
-   console.log('Ingesting log file: ', filename, ' as ', shortFilename);
-
    // create a Reader for the string contents of the file
-   sp.files[filename]?.split('\n').forEach((line) => {
+   contents?.split('\n').forEach((line) => {
 
       if (line === null || line.trim() === '')
       {
          return; // if line is null or empty, skip it
       }
 
-      const entry = CreateLogEntryFromLine(default_timestamp, shortFilename, line);
+      const entry = CreateLogEntryFromLine(default_timestamp, logName, line);
       if (entry !== null)
       {
-         sp.entries.push(entry);
+         entries.push(entry);
          // set the default timestamp to the last entry
          // if the next entry cannot determine its timestamp, we will use this one
          default_timestamp = entry.unixtimestamp; 
@@ -499,14 +495,19 @@ function IngestTextualLogFileToDB(sp: SupportPackageProps, filename: string)
 function CreateLogDB(sp: SupportPackageProps)
 {
    const logFiles = Object.keys(sp.files).filter(fn => fn.endsWith('.log'));
+   let entries = new Array<ProcessedLogEntry>();
 
    // Read all log files and create a log structure
    logFiles.forEach((logFile) => {
-      IngestTextualLogFileToDB(sp, logFile);
+      // The logName should be the name of the file without the path or the suffix
+      const logName = logFile.split('/').pop()?.split('.').shift() as string;
+      console.log('Ingesting log file: ', logFile, ' as ', logName);
+      IngestTextualLogFileToDB(entries, logName, sp.files[logFile]);
    });
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
-   sp.entries.sort((a, b) => a.unixtimestamp - b.unixtimestamp);
+   entries.sort((a, b) => a.unixtimestamp - b.unixtimestamp);
+   sp.entries = entries;
    console.log('Log entries have been sorted by timestamp.');
 
    console.log('Creating searchable log maps...');
@@ -602,8 +603,9 @@ function ProcessFilteredLog(sp: SupportPackageProps)
 
          if (filename in sp.fileMap)
          {
-            sp.fileMap[filename].forEach((index) => {
-               allowedLineIndeces.push(index);
+            const fileEntries = sp.fileMap[filename];
+            fileEntries.forEach((value) => {
+               allowedLineIndeces.push(value);
             });
          }
       });
@@ -621,8 +623,8 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    // This should be a concatenation of all the allowed log entries 
 
    sp.filteredLog = '';
-   allowedLineIndeces.sort().forEach((index) => {
-      sp.filteredLog += sp.entries[index].message + '\n';
+   allowedLineIndeces.forEach((index) => {
+      sp.filteredLog += sp.entries[index].unixtimestamp.toString() + ' ' + sp.entries[index].message + '\n';
    });
 }
 
@@ -645,7 +647,7 @@ export const supportPackageSlice = createSlice({
       },
 
       filteredLog: "", // Potentially very large blob of text that is the filtered log
-      chosenView: "<Analysis>", // The chosenView is either the name of a file or "<Analysis>" or "<All logs>"
+      chosenView: "<Summary>", // The chosenView is either the name of a file or "<Summary>" or "<Logs>"
    },
    
    reducers: {

@@ -48,6 +48,9 @@ export default function UploadSupportPackage() {
         }
 
         dispatch(uploadPackageThunk(file));
+
+        // clear the file list
+        e.files = [];
     };
 
     return (
@@ -61,6 +64,7 @@ export default function UploadSupportPackage() {
             <FileUpload 
                 // url="/api/upload" 
                 customUpload
+                auto
                 mode="basic"
                 accept="*.tgz" 
                 maxFileSize={10000000} // 10MB
