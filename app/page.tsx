@@ -32,9 +32,9 @@ const WhisprMainView = () => {
         console.log('filteredLogs=', filteredLog);
     }, [chosenView]);
 
-    function onFileSelected(filename: string, displayAsJson: boolean) {
+    function onViewChosen(filename: string, displayAsJson: boolean) {
         
-        console.log('AppTopbar.onFileSelected: filename=', filename, ' displayAsJson=', displayAsJson);
+        console.log('AppTopbar.onViewChosen: filename=', filename, ' displayAsJson=', displayAsJson);
         dispatch(applyChosenView(filename));
     }
 
@@ -98,7 +98,7 @@ const WhisprMainView = () => {
                     <UploadSupportPackage/>
                 </div>
                 <div className="col-2">
-                    <FilePicker onFileSelected={onFileSelected}/>
+                    <FilePicker onFileSelected={onViewChosen}/>
                 </div>
                 <div className="col-3">
                     <MultiSelect 

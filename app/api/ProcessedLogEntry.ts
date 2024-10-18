@@ -13,4 +13,5 @@ export interface ProcessedLogEntry {
       severity: Severity;
       component: string;
       message: string;
+      color: string;
    };

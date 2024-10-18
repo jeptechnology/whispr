@@ -5,19 +5,20 @@ import { gunzipSync } from 'fflate';
 import DecodeLogs from './DecodeLogs';
 import { ProcessedLogEntry } from './ProcessedLogEntry';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
-import { start } from 'repl';
+import { stat } from 'fs';
 
-const colors = {
-   red:   "\x1b[1;31m",   
-   green: "\x1b[1;32m",
-   yellow: "\x1b[1;33m",
-   blue:  "\x1b[1;34m",
-   magenta: "\x1b[1;35m",
-   cyan:  "\x1b[1;36m",
-   reset: "\x1b[0m",
-};
+const colors = [
+   { name: "white", value: "\x1b[37m" },
+   { name: "blue", value: "\x1b[1;34m" },
+   { name: "green", value: "\x1b[1;32m" },
+   { name: "red", value: "\x1b[1;31m" },
+   { name: "yellow", value: "\x1b[1;33m" },
+   { name: "magenta", value: "\x1b[1;35m" },
+   { name: "cyan", value: "\x1b[1;36m" },   
+   { name: "grey", value: "\x1b[90m" },
+];
 
-
+const ResetColor = "\x1b[0m"
 
 // SupportPackageProps is an interface that defines the props of the SupportPackage component.
 // There is a map of filenames and their contents as Uint8Arrays.
@@ -352,7 +353,7 @@ function ConcatenateAllLocalLogs(sp: SupportPackageProps)
    });
 }
 
-function DecodeWiserHomeLogEntry(file: string, line: string): ProcessedLogEntry
+function DecodeWiserHomeLogEntry(file: string, line: string, color: string): ProcessedLogEntry
 {
    // [2024-07-16 20:44:38.339] [zigbee    ] [notice    ] Some message text
 
@@ -362,6 +363,7 @@ function DecodeWiserHomeLogEntry(file: string, line: string): ProcessedLogEntry
       severity: Severity.Notice,
       component: "",
       message: line, // we should faithfully preserve the whole line here
+      color: color
    };
 
    let timestamp = line.substring(1, line.indexOf(']'));
@@ -388,7 +390,7 @@ function DecodeWiserHomeLogEntry(file: string, line: string): ProcessedLogEntry
    return entry;
 }
 
-function DecodeJournalLogEntry(default_timestamp: number, filename: string, line: string): ProcessedLogEntry
+function DecodeJournalLogEntry(default_timestamp: number, filename: string, line: string, color: string): ProcessedLogEntry
 {
    // Extract the timestamp
    let entry = { 
@@ -397,6 +399,7 @@ function DecodeJournalLogEntry(default_timestamp: number, filename: string, line
       severity: getSeverityDefaultValue(),
       component: "",
       message: line, // we should faithfully preserve the whole line here
+      color: color
    };
 
    if (line[0].match(/[a-z]/i))
@@ -461,19 +464,19 @@ function DecodeJournalLogEntry(default_timestamp: number, filename: string, line
    return entry;   
 }
 
-function CreateLogEntryFromLine(default_timestamp: number, filename: string, text: string): ProcessedLogEntry
+function CreateLogEntryFromLine(default_timestamp: number, filename: string, text: string, color: string): ProcessedLogEntry
 {
    // If the very first characeter This is a wiser-home log entry of the form:
    // [2024-07-16 20:44:38.339] [zigbee    ] [notice    ] Some message text
    if (text.startsWith('['))
    {
-      return DecodeWiserHomeLogEntry(filename, text);
+      return DecodeWiserHomeLogEntry(filename, text, color);
    }
    // else if the line begins with a letter, then it is an old style journal entry of the form: 
    // Oct 02 07:00:54 WiserHeat05C2D7 component[id]: message text
    else if (filename == "journal")
    {
-      return DecodeJournalLogEntry(default_timestamp, filename, text);
+      return DecodeJournalLogEntry(default_timestamp, filename, text, color);
    }
 
    // TODO: This is a new style log entry which we don't know how to parse yet   
@@ -482,11 +485,12 @@ function CreateLogEntryFromLine(default_timestamp: number, filename: string, tex
       file: filename, 
       severity: Severity.Notice, 
       component: "", 
-      message: text 
+      message: text,
+      color: color
    };
 }
 
-function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string, contents: string): number[] // returns the first and last timestamp of the log
+function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string, contents: string, color: string): number[] // returns the first and last timestamp of the log
 {  
    let timestampRange = [0, 0];
 
@@ -500,7 +504,7 @@ function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string,
          return; // if line is null or empty, skip it
       }
 
-      const entry = CreateLogEntryFromLine(default_timestamp, logName, line);
+      const entry = CreateLogEntryFromLine(default_timestamp, logName, line, color);
       if (entry !== null)
       {
          entries.push(entry);
@@ -559,6 +563,19 @@ function GetPrettyFileSize(size: number): string {
    }
 }
 
+function PickUnusedColorIndex(sp: SupportPackageProps): number
+{
+   let colorIndex = 0;
+
+   // check if the colorIndex is already in use in one of our analyzed files
+   while (Object.keys(sp.fileAnalysis).some((key) => sp.fileAnalysis[key].colorIndex === colorIndex))
+   {
+      colorIndex++;
+   }
+
+   return colorIndex;
+}
+
 function CreateLogDB(sp: SupportPackageProps)
 {
    Object.keys(sp.files).forEach((filename, ) => {
@@ -568,21 +585,25 @@ function CreateLogDB(sp: SupportPackageProps)
          size: GetPrettyFileSize(sp.files[filename].length),
          firstEntry: 0,
          lastEntry: 0,
-         type: GetFileTypeFromFilename(filename)
+         type: GetFileTypeFromFilename(filename),
+         colorIndex: PickUnusedColorIndex(sp)
       };
    });
 
    const logFiles = Object.keys(sp.files).filter(fn => fn.endsWith('.log'));
    let entries = new Array<ProcessedLogEntry>();
 
+   let colorIndex = 0;
+   
    // Read all log files and create a log structure
    logFiles.forEach((logFile) => {
       // The logName should be the name of the file without the path or the suffix
       const logName = logFile.split('/').pop()?.split('.').shift() as string;
       console.log('Ingesting log file: ', logFile, ' as ', logName);
-      const [first, last] = IngestTextualLogFileToDB(entries, logName, sp.files[logFile]);
+      const [first, last] = IngestTextualLogFileToDB(entries, logName, sp.files[logFile], colors[colorIndex].value);
       sp.fileAnalysis[logFile].firstEntry = first;
       sp.fileAnalysis[logFile].lastEntry = last;
+      colorIndex++;
    });
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
@@ -663,14 +684,13 @@ function PostProcessSupportPackage(sp: SupportPackageProps, contents: string)
 
 function ProcessFilteredLog(sp: SupportPackageProps)
 {
-   // if we have one file selected and the file ends in .json, then we should show the JSON contents
-   if (sp.filter.files.length === 1 && !sp.filter.files[0].endsWith('.log'))
+   // if our chosen view is actually just the name of a file in our sp, we should just display that file
+   if (sp.chosenView in sp.files)
    {
-      const filename = sp.filter.files[0];
-      sp.filteredLog = sp.files[filename];
+      sp.filteredLog = sp.files[sp.chosenView];
       return;
    }
-
+   
    let allowedLineIndeces = new Array<number>();
 
    // for each file in our filter, get the set of log entries
@@ -703,7 +723,7 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    // This should be a concatenation of all the allowed log entries 
 
    let filteredLog = '';
-   allowedLineIndeces.forEach((index) => {
+   allowedLineIndeces.sort().forEach((index) => {
       
       const entry = sp.entries[index];
       
@@ -721,7 +741,8 @@ function ProcessFilteredLog(sp: SupportPackageProps)
       {
          filteredLog += entry.unixtimestamp.toString() + ' ';
       }
-      filteredLog += colors.blue + entry.message + colors.reset + "\n";
+
+      filteredLog += entry.color + entry.message + "\x1b[0m\n";
    });
    
    sp.filteredLog = filteredLog.length > 0 ? filteredLog : 'No log entries found matching the filter criteria';
@@ -734,6 +755,7 @@ export interface AnalysedLogFile {
    firstEntry: number;
    lastEntry: number;
    type: string;
+   colorIndex: number;
 };
 
 export const supportPackageSlice = createSlice({
