@@ -29,7 +29,11 @@ const FilePicker = ({ onFileSelected }: FilePickerProps) => {
       console.log("Files: ", files);
       let options = ["<Summary>", "<Logs>"];
 
-      Object.keys(files ? files : {}).forEach((filename) => {       
+      Object.keys(files ? files : {}).forEach((filename) => {
+        // if this is a log file, exclude it from the list of options
+        if (filename.endsWith(".log")) {
+          return;
+        }       
         options.push(filename);
       });
 

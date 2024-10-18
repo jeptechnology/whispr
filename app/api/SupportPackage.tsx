@@ -771,6 +771,7 @@ export const supportPackageSlice = createSlice({
       applyChosenView: (state, action) => {
          console.log('Applying chosen view: ', action.payload);
          state.chosenView = action.payload;
+         ProcessFilteredLog(state);
       }
    }
 })
