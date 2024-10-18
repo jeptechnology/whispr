@@ -590,7 +590,7 @@ function ProcessFilteredLog(sp: SupportPackageProps)
       return;
    }
 
-   let allowedLineIndeces = new Set<number>();
+   let allowedLineIndeces = new Array<number>();
 
    // for each file in our filter, get the set of log entries
    if (sp.filter.files.length > 0)
@@ -603,7 +603,7 @@ function ProcessFilteredLog(sp: SupportPackageProps)
          if (filename in sp.fileMap)
          {
             sp.fileMap[filename].forEach((index) => {
-               allowedLineIndeces.add(index);
+               allowedLineIndeces.push(index);
             });
          }
       });
@@ -611,7 +611,7 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    else
    {
       // if no files are selected, then all log entries are allowed
-      sp.entries.forEach((entry, index) => allowedLineIndeces.add(index));
+      sp.entries.forEach((entry, index) => allowedLineIndeces.push(index));
    }
 
    // TODO: Implement the filter for severity and timestamp
@@ -621,7 +621,7 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    // This should be a concatenation of all the allowed log entries 
 
    sp.filteredLog = '';
-   allowedLineIndeces.forEach((index) => {
+   allowedLineIndeces.sort().forEach((index) => {
       sp.filteredLog += sp.entries[index].message + '\n';
    });
 }

@@ -7,12 +7,14 @@ import UploadSupportPackage from '@/app/components/UploadSupportPackage';
 import FilePicker from '../app/components/FilePicker';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { applyFilter, applyChosenView } from '@/app/api/SupportPackage';
+import { Calendar } from 'primereact/calendar';
+import { Nullable } from 'primereact/ts-helpers';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     const menubuttonRef = useRef(null);
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
-    const files = useAppSelector((state) => state.supportPackage.files);
+    // const files = useAppSelector((state) => state.supportPackage.files);
     const filter = useAppSelector((state) => state.supportPackage.filter);
     const dispatch = useAppDispatch();
 
@@ -39,18 +41,50 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
         dispatch(applyChosenView(filename));
     }
 
+    function GetStartTime(): Nullable<Date> {
+        if (filter.timestampStart === undefined || filter.timestampStart === null || filter.timestampStart === 0) {
+            return null;
+        }
+        return new Date(filter.timestampStart);
+    }
+
+    function GetEndTime(): Nullable<Date> {
+        if (filter.timestampEnd === undefined || filter.timestampEnd === null || filter.timestampEnd === 0) {
+            return null;
+        }
+        return new Date(filter.timestampEnd);
+    }
+
+    function applyStartTime(date: Nullable<Date>) {
+        console.log('AppTopbar.setStartTime: date=', date);
+        dispatch(applyFilter({...filter, timestampStart: date?.getTime()}));        
+    }
+
+    function applyEndTime(date: Nullable<Date>) {
+        console.log('AppTopbar.setEndTime: date=', date);
+        dispatch(applyFilter({...filter, timestampEnd: date?.getTime()}));
+    }
+
     return (
         <div className="layout-topbar">
             <Link href="/" className="layout-topbar-logo">
                 {/* <img src={`/layout/images/logo-${layoutConfig.colorScheme !== 'light' ? 'white' : 'dark'}.svg`} width="47.22px" height={'35px'} alt="logo" /> */}
-                <span className="layout-topbar-tooltip" title="Wiser Home Integrated Support Package Reader">WHISPR</span>
+                <span className="layout-topbar-tooltip" title="Wiser Home Integrated Support Package Reader">WHISP</span>
             </Link>
 
             <div className="col-2">
                 <UploadSupportPackage/>
             </div>
-            <div className="layout-topbar-icons">
+            <div className="col-2">
                 <FilePicker onFileSelected={onFileSelected}/>
+            </div>
+
+            <div className="col-2">
+                <p>Start Time</p>
+                <Calendar value={GetStartTime()} onChange={(e) => applyStartTime(e.value)} showTime hourFormat="24" />
+            </div>
+            <div className="col-2">
+                <Calendar value={GetEndTime()} onChange={(e) => applyEndTime(e.value)} showTime hourFormat="24" />
             </div>
 
 {/*             
