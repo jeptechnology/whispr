@@ -88,10 +88,8 @@ const WhisprMainView = () => {
                 <div className="col-2">
                     <FilePicker onFileSelected={onFileSelected}/>
                 </div>
-                <div className="col-2">
+                <div className="col-7">
                     <label>Filters...</label>
-                </div>
-                <div className="col-4">
                     <label> From: </label>
                     <Calendar id="start-time-calendar" 
                         value={GetStartTime()} 
@@ -111,7 +109,7 @@ const WhisprMainView = () => {
                        <Analysis/>
                     ) 
                   : (
-                        <LogViewer/>
+                       <LogViewer/>
                     )
                 }
             </div>            

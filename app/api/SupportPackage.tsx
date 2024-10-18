@@ -17,6 +17,10 @@ export interface SupportPackageProps {
    // NOTE: This means when we are working with binary files, we need to convert them to a string.
    files: Record<string, string>;
 
+   // Set of file analysis
+   // NOTE: This means when we are working with binary files, we need to convert them to a string.
+   fileAnalysis: Record<string, AnalysedLogFile>;
+
    // These will be sorted by timestamp - which is stored in milliseconds since epoch
    entries : Array<ProcessedLogEntry>;
    
@@ -30,7 +34,7 @@ export interface SupportPackageProps {
    severityMap: Record<Severity, Array<number>>;
    
    filter: {
-      componentMapeverity: Record<string, string>, // Map of component -> severity
+      componentSeverity: Record<string, string>, // Map of component -> severity
       files: Array<string>, // Set of filenames to filter by
       timestampStart: number, // Start of the timestamp range
       timestampEnd: number, // End of the timestamp range
@@ -470,8 +474,10 @@ function CreateLogEntryFromLine(default_timestamp: number, filename: string, tex
    };
 }
 
-function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string, contents: string)
+function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string, contents: string): number[] // returns the first and last timestamp of the log
 {  
+   let timestampRange = [0, 0];
+
    let default_timestamp = 0;
 
    // create a Reader for the string contents of the file
@@ -489,12 +495,70 @@ function IngestTextualLogFileToDB(entries: ProcessedLogEntry[], logName: string,
          // set the default timestamp to the last entry
          // if the next entry cannot determine its timestamp, we will use this one
          default_timestamp = entry.unixtimestamp; 
+
+         // update the timestamp range
+         if (timestampRange[0] === 0 || entry.unixtimestamp < timestampRange[0])
+         {
+            timestampRange[0] = entry.unixtimestamp;
+         }
+
+         if (timestampRange[1] === 0 || entry.unixtimestamp > timestampRange[1])
+         {
+            timestampRange[1] = entry.unixtimestamp;
+         }
       }
    });
+
+   return timestampRange;
+}
+
+function GetFileTypeFromFilename(filename: string): string {
+   const parts = filename.split('.');
+   const suffix = parts[parts.length - 1];
+
+   if (suffix === 'tgz') {
+       return 'Support Package';
+   }
+   else if (suffix === 'log') {
+       return 'Log File';
+   }
+   else if (suffix === 'json') {
+       return 'JSON File';
+   }
+   else if (suffix === 'txt') {
+       return 'Text File';
+   }
+
+   return 'File';
+}
+
+function GetPrettyFileSize(size: number): string {
+   if (size < 1024) {
+       return size + ' B';
+   }
+   else if (size < 1024 * 1024) {
+       return (size / 1024).toFixed(2) + ' KB';
+   }
+   else if (size < 1024 * 1024 * 1024) {
+       return (size / 1024 / 1024).toFixed(2) + ' MB';
+   }
+   else {
+       return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+   }
 }
 
 function CreateLogDB(sp: SupportPackageProps)
 {
+   Object.keys(sp.files).forEach((filename, ) => {
+      sp.fileAnalysis[filename] = {
+         name: filename,
+         size: GetPrettyFileSize(sp.files[filename].length),
+         firstEntry: 0,
+         lastEntry: 0,
+         type: GetFileTypeFromFilename(filename)
+      };
+   });
+
    const logFiles = Object.keys(sp.files).filter(fn => fn.endsWith('.log'));
    let entries = new Array<ProcessedLogEntry>();
 
@@ -503,7 +567,9 @@ function CreateLogDB(sp: SupportPackageProps)
       // The logName should be the name of the file without the path or the suffix
       const logName = logFile.split('/').pop()?.split('.').shift() as string;
       console.log('Ingesting log file: ', logFile, ' as ', logName);
-      IngestTextualLogFileToDB(entries, logName, sp.files[logFile]);
+      const [first, last] = IngestTextualLogFileToDB(entries, logName, sp.files[logFile]);
+      sp.fileAnalysis[logFile].firstEntry = first;
+      sp.fileAnalysis[logFile].lastEntry = last;
    });
 
    console.log('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
@@ -585,7 +651,7 @@ function PostProcessSupportPackage(sp: SupportPackageProps, contents: string)
 function ProcessFilteredLog(sp: SupportPackageProps)
 {
    // if we have one file selected and the file ends in .json, then we should show the JSON contents
-   if (sp.filter.files.length === 1 && sp.filter.files[0].endsWith('.json'))
+   if (sp.filter.files.length === 1 && !sp.filter.files[0].endsWith('.log'))
    {
       const filename = sp.filter.files[0];
       sp.filteredLog = sp.files[filename];
@@ -648,19 +714,27 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    sp.filteredLog = filteredLog.length > 0 ? filteredLog : 'No log entries found matching the filter criteria';
 }
 
+export interface AnalysedLogFile {
+   name: string;
+   size: string;
+   firstEntry: number;
+   lastEntry: number;
+   type: string;
+};
+
 export const supportPackageSlice = createSlice({
    name: 'supportPackage',
    
    initialState: {
-      files:        {} as Record<string, string>,        // All discovered files in the support package as 
-      
+      files:        {} as Record<string, string>,        // All discovered files in the support package as content strings 
+      fileAnalysis: {} as Record<string, AnalysedLogFile>, // All discovered files in the support package as AnalysedLogFiles
       entries:      new Array<ProcessedLogEntry>(),   // All discovered log entries and their metadata
       fileMap:      {} as Record<string, Array<number>>,   // All discovered log files as a Map of filename -> Set of log entry indeces
       componentMap: {} as Record<string, Array<number>>,   // All discovered log componentMap as a Map of component -> Set of log entry indeces
       severityMap:  {} as Record<Severity, Array<number>>,   // All discovered log severities as a Map of severity -> Set of log entry indeces
 
       filter: {
-         componentMapeverity: {}, // Map of component -> severity
+         componentSeverity: {}, // Map of component -> severity
          files: new Array<string>(), // Set of filenames to filter by
          timestampStart: 0, // Start of the timestamp range
          timestampEnd: 0, // End of the timestamp range
