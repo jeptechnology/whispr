@@ -34,6 +34,7 @@ export interface SupportPackageProps {
       files: Array<string>, // Set of filenames to filter by
       timestampStart: number, // Start of the timestamp range
       timestampEnd: number, // End of the timestamp range
+      includeUnixTimestamp: boolean, // Include the unix timestamp in the log output
    };
 
    // Potentially very large blob of text that is the filtered log
@@ -622,10 +623,29 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    // Finally we can create the filtered log
    // This should be a concatenation of all the allowed log entries 
 
-   sp.filteredLog = '';
+   let filteredLog = '';
    allowedLineIndeces.forEach((index) => {
-      sp.filteredLog += sp.entries[index].unixtimestamp.toString() + ' ' + sp.entries[index].message + '\n';
+      
+      const entry = sp.entries[index];
+      
+      // first ensure that if the start and end timestamps are set, that the log entry is within that range
+      if (sp.filter.timestampStart !== 0 && entry.unixtimestamp < sp.filter.timestampStart)
+      {
+         return;
+      }
+      if (sp.filter.timestampEnd !== 0 && entry.unixtimestamp > sp.filter.timestampEnd)
+      {
+         return;
+      }
+
+      if (sp.filter.includeUnixTimestamp)
+      {
+         filteredLog += entry.unixtimestamp.toString() + ' ';
+      }
+      filteredLog += entry.message + '\n';
    });
+   
+   sp.filteredLog = filteredLog.length > 0 ? filteredLog : 'No log entries found matching the filter criteria';
 }
 
 export const supportPackageSlice = createSlice({
@@ -644,6 +664,7 @@ export const supportPackageSlice = createSlice({
          files: new Array<string>(), // Set of filenames to filter by
          timestampStart: 0, // Start of the timestamp range
          timestampEnd: 0, // End of the timestamp range
+         includeUnixTimestamp: false, // Include the unix timestamp in the log output
       },
 
       filteredLog: "", // Potentially very large blob of text that is the filtered log
