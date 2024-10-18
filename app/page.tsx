@@ -10,6 +10,8 @@ import UploadSupportPackage from "./components/UploadSupportPackage";
 import { useAppDispatch, useAppSelector, useAppStore } from "./hooks";
 import { Calendar } from 'primereact/calendar';
 import { Nullable } from 'primereact/ts-helpers';
+import { MultiSelect } from 'primereact/multiselect';
+import { SelectItem } from 'primereact/selectitem';
 
 // define the WhisprMainView component props
 export interface WhisprMainViewProps {
@@ -18,33 +20,28 @@ export interface WhisprMainViewProps {
 
 const WhisprMainView = () => {
 
-    const store = useAppStore();
+    //const store = useAppStore();
     const chosenView = useAppSelector((state) => state.supportPackage.chosenView);
-    const [view, setView] = React.useState<string | null>(null);
     const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
     const filter = useAppSelector((state) => state.supportPackage.filter);
+    const files = useAppSelector((state) => state.supportPackage.fileAnalysis);
     const dispatch = useAppDispatch();
 
     useEffect(() => {
         console.log('WhisprMainView.useEffect: chosenView=', chosenView);
         console.log('filteredLogs=', filteredLog);
-        setView(chosenView);
     }, [chosenView]);
 
     function onFileSelected(filename: string, displayAsJson: boolean) {
         
         console.log('AppTopbar.onFileSelected: filename=', filename, ' displayAsJson=', displayAsJson);
         dispatch(applyChosenView(filename));
+    }
 
-        if (filename === '<Logs>') {
-            // if filename == "All" then clear the filter by setting files to an empty set
-            dispatch(applyFilter({...filter, files: []}));
-        }
-        else
-        {
-            // if displayAsJson is true, then set the filter to display the log as JSON
-            dispatch(applyFilter({...filter, files: [filename], displayAsJson}));
-        }
+    function applyLogFilter(logs: string[]) {
+        console.log('AppTopbar.applyLogFilter: logs=', logs);
+
+        dispatch(applyFilter({...filter, files: logs}));
     }
 
     function GetStartTime(): Nullable<Date> {
@@ -71,6 +68,21 @@ const WhisprMainView = () => {
         dispatch(applyFilter({...filter, timestampEnd: date?.getTime()}));
     }
 
+    function GetLogOptions(): SelectItem[] {
+        let options = new Array<SelectItem>();
+        
+        Object.keys(files).forEach((filename) => {
+            const entry = files[filename];
+            if (entry.type !== 'Log File') {
+                return;
+            }
+            options.push({label: entry.logname, value: filename});            
+        });
+        return options;
+    }
+
+    const logOptions = GetLogOptions();
+
     // If the chosen view is:
     // "<Summary>" - show the <AnalysisViewer> component
     // "<Logs>" - show the <FilteredLogViewer> component
@@ -88,9 +100,18 @@ const WhisprMainView = () => {
                 <div className="col-2">
                     <FilePicker onFileSelected={onFileSelected}/>
                 </div>
-                <div className="col-7">
-                    <label>Filters...</label>
-                    <label> From: </label>
+                <div className="col-3">
+                    <MultiSelect 
+                            value={filter.files} 
+                            onChange={(e) => applyLogFilter(e.value)} 
+                            options={logOptions} 
+                            // optionLabel="name" 
+                            filter placeholder="Select Logs" 
+                            className="w-full md:w-20rem"
+                            />
+                </div>
+                <div className="col-5">
+
                     <Calendar id="start-time-calendar" 
                         value={GetStartTime()} 
                         onChange={(e) => applyStartTime(e.value)} 

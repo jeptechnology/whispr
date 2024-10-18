@@ -7,6 +7,18 @@ import { ProcessedLogEntry } from './ProcessedLogEntry';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { start } from 'repl';
 
+const colors = {
+   red:   "\x1b[1;31m",   
+   green: "\x1b[1;32m",
+   yellow: "\x1b[1;33m",
+   blue:  "\x1b[1;34m",
+   magenta: "\x1b[1;35m",
+   cyan:  "\x1b[1;36m",
+   reset: "\x1b[0m",
+};
+
+
+
 // SupportPackageProps is an interface that defines the props of the SupportPackage component.
 // There is a map of filenames and their contents as Uint8Arrays.
 // There is an API to upload a support package from a File
@@ -551,7 +563,8 @@ function CreateLogDB(sp: SupportPackageProps)
 {
    Object.keys(sp.files).forEach((filename, ) => {
       sp.fileAnalysis[filename] = {
-         name: filename,
+         fullname: filename,
+         logname: filename.split('/').pop()?.split('.').shift() as string,
          size: GetPrettyFileSize(sp.files[filename].length),
          firstEntry: 0,
          lastEntry: 0,
@@ -708,14 +721,15 @@ function ProcessFilteredLog(sp: SupportPackageProps)
       {
          filteredLog += entry.unixtimestamp.toString() + ' ';
       }
-      filteredLog += entry.message + '\n';
+      filteredLog += colors.blue + entry.message + colors.reset + "\n";
    });
    
    sp.filteredLog = filteredLog.length > 0 ? filteredLog : 'No log entries found matching the filter criteria';
 }
 
 export interface AnalysedLogFile {
-   name: string;
+   fullname: string;
+   logname: string;
    size: string;
    firstEntry: number;
    lastEntry: number;
