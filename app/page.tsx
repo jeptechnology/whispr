@@ -8,6 +8,8 @@ import { applyFilter, applyChosenView } from '@/app/api/SupportPackage';
 import FilePicker from "./components/FilePicker";
 import UploadSupportPackage from "./components/UploadSupportPackage";
 import { useAppDispatch, useAppSelector, useAppStore } from "./hooks";
+import { Calendar } from 'primereact/calendar';
+import { Nullable } from 'primereact/ts-helpers';
 
 // define the WhisprMainView component props
 export interface WhisprMainViewProps {
@@ -47,6 +49,30 @@ const WhisprMainView = () => {
         }
     }
 
+    function GetStartTime(): Nullable<Date> {
+        if (filter.timestampStart === undefined || filter.timestampStart === null || filter.timestampStart === 0) {
+            return null;
+        }
+        return new Date(filter.timestampStart);
+    }
+
+    function GetEndTime(): Nullable<Date> {
+        if (filter.timestampEnd === undefined || filter.timestampEnd === null || filter.timestampEnd === 0) {
+            return null;
+        }
+        return new Date(filter.timestampEnd);
+    }
+
+    function applyStartTime(date: Nullable<Date>) {
+        console.log('AppTopbar.setStartTime: date=', date);
+        dispatch(applyFilter({...filter, timestampStart: date?.getTime()}));        
+    }
+
+    function applyEndTime(date: Nullable<Date>) {
+        console.log('AppTopbar.setEndTime: date=', date);
+        dispatch(applyFilter({...filter, timestampEnd: date?.getTime()}));
+    }
+
     // If the chosen view is:
     // "<Analsys>" - show the <AnalysisViewer> component
     // "<All logs>" - show the <FilteredLogViewer> component
@@ -65,6 +91,15 @@ const WhisprMainView = () => {
                 <div className="layout-topbar-icons">
                     <FilePicker onFileSelected={onFileSelected}/>
                 </div>
+
+                <div className="col-2">
+                    <Calendar value={GetStartTime()} onChange={(e) => applyStartTime(e.value)} showTime hourFormat="24" />
+                </div>
+    
+                <div className="col-2">
+                    <Calendar value={GetEndTime()} onChange={(e) => applyEndTime(e.value)} showTime hourFormat="24" />
+                </div>
+
             </div>
             <div className="layout-main-container">
                  <div className="layout-main">
