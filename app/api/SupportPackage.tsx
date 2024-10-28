@@ -61,9 +61,15 @@ export interface SupportPackageProps {
    chosenView: string;
 }   
 
+function logWithTimestamp(message?: any, ...optionalParams: any[])
+{
+   const now = new Date();
+   console.log(now.toISOString() + " " + message, ...optionalParams);
+}
+
 function createFile(state: SupportPackageProps, filename: string, contents: string)
 {
-   console.log('Creating file: ', filename, ' with content length: ', contents.length);
+   logWithTimestamp('Creating file: ', filename, ' with content length: ', contents.length);
    state.files[filename] = contents;
 }
 
@@ -71,7 +77,7 @@ function deleteFile(state: SupportPackageProps, filename: string)
 {
    if (filename in state.files)
    {
-      console.log('Removing file: ', filename);
+      logWithTimestamp('Removing file: ', filename);
       delete state.files[filename];
    }
 }
@@ -104,16 +110,16 @@ function DecompressSupportPackage(sp: SupportPackageProps, fileContents: Uint8Ar
             return;
          }
    
-         console.log('File available: ', availableFile.name);
+         logWithTimestamp('File available: ', availableFile.name);
    
          // if the file ends with '.gz' then we need to decompress it again
          if (availableFile.name.endsWith('.gz'))
          {
-            console.log('File is a .gz file, attempting to decompress');
+            logWithTimestamp('File is a .gz file, attempting to decompress');
             const decompressedData = gunzipSync(availableFile.contents);
             // strip the .gz from the filename
             const decompressedFileName = availableFile.name.slice(0, -3);
-            console.log('File decompressed. Saving to SupportPackage as ', decompressedFileName);
+            logWithTimestamp('File decompressed. Saving to SupportPackage as ', decompressedFileName);
             createFile(sp, decompressedFileName, DecodeLogfile(decompressedFileName, decompressedData));
          }
          else
@@ -121,7 +127,7 @@ function DecompressSupportPackage(sp: SupportPackageProps, fileContents: Uint8Ar
             // if the filename ends in .json, then we should parse it as JSON and pretty print it
             if (availableFile.name.endsWith('.json'))
             {
-               console.log('File is a .json file, attempting to parse');
+               logWithTimestamp('File is a .json file, attempting to parse');
                const jsonContents = JSON.stringify(JSON.parse(DecodeLogfile(availableFile.name, availableFile.contents)), null, 3);               
                createFile(sp, availableFile.name, jsonContents);
             }
@@ -132,12 +138,12 @@ function DecompressSupportPackage(sp: SupportPackageProps, fileContents: Uint8Ar
             }
          }      
       }, () => {
-         console.log('All files parsed');              
+         logWithTimestamp('All files parsed');              
       });
    }
    catch (err)
    {
-      console.log('Error decompressing support package:', err, ' - assume it is an RTOS support package');
+      logWithTimestamp('Error decompressing support package:', err, ' - assume it is an RTOS support package');
       // RTOS packages just need to be saved as the file "SupportPackage.txt"
       createFile(sp, 'SupportPackage.txt', new TextDecoder().decode(fileContents));
    }
@@ -150,7 +156,7 @@ function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
    // if the SupportPackage.txt file does not exist, return
    if (fileContent === undefined)
    {
-      console.log('SupportPackage.txt file not found');
+      logWithTimestamp('SupportPackage.txt file not found');
       return;
    }
    
@@ -190,7 +196,7 @@ function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
          const expectedSection = expectedSections[j];
          if (section.includes(expectedSection.name))
          {
-            console.log('Found section: ', expectedSection.name);
+            logWithTimestamp('Found section: ', expectedSection.name);
             const sectionName = expectedSection.name;
             const sectionContents = section.split(sectionName)[1].trim();
 
@@ -215,7 +221,7 @@ function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
          const expectedSection = expectedDataSections[j];
          if (section.includes(expectedSection.name))
          {
-            console.log('Found OLD RTOS data section: ', expectedSection.name);
+            logWithTimestamp('Found OLD RTOS data section: ', expectedSection.name);
             const sectionName = expectedSection.name;
             const sectionContents = section.split(sectionName)[1].trim();
             // place this section in the global JSON object
@@ -234,7 +240,7 @@ function DecodeSupportPackageTxt(sp: SupportPackageProps, inputFilePath: string)
    // remove the SupportPackage.txt file
    deleteFile(sp, inputFilePath);
 
-   console.log('Sections have been successfully written to separate files.');
+   logWithTimestamp('Sections have been successfully written to separate files.');
 }
 
 function ConcatenateOldWiserHomeLogs(sp: SupportPackageProps, logsFolder: string, fullLogsWritePath: string)
@@ -262,7 +268,7 @@ function ConcatenateOldWiserHomeLogs(sp: SupportPackageProps, logsFolder: string
       }
       catch (err)
       {
-         console.log('Error reading wiser home log file: ', logFileToLookFor, ' - ', err);
+         logWithTimestamp('Error reading wiser home log file: ', logFileToLookFor, ' - ', err);
       }
 
    }
@@ -276,7 +282,7 @@ function ConcatenateOldWiserHomeLogs(sp: SupportPackageProps, logsFolder: string
 
 function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder: string, fullLogsWritePath: string)
 {
-   console.log('Concatenating container logs in folder: ', logFolder);
+   logWithTimestamp('Concatenating container logs in folder: ', logFolder);
 
    let fullLogContents = '';
 
@@ -309,7 +315,7 @@ function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder: strin
    });
    
    partialLogFilenames.forEach((partialLogFilename) => {
-      console.log('Found container log: ', partialLogFilename);
+      logWithTimestamp('Found container log: ', partialLogFilename);
          // append the contents of the file to the full log contents
       fullLogContents += sp.files[partialLogFilename];
       // delete the file
@@ -326,7 +332,7 @@ function ConcatenateContainerLocalLogs(sp: SupportPackageProps, logFolder: strin
    }
    catch (err)
    {
-      console.log('Error reading current container log file: ', currentLogFile, ' - ', err);
+      logWithTimestamp('Error reading current container log file: ', currentLogFile, ' - ', err);
    }
 
    // if we have any log contents, save them to the fullLogsWritePath
@@ -344,7 +350,7 @@ function ConcatenateAllLocalLogs(sp: SupportPackageProps)
                                      .filter(fn => fn.startsWith('logs/') && fn.endsWith('/container.log'))
                                      .map(fn => fn.split('/')[1]);
   
-   console.log("Found containers: ", containerNames);
+   logWithTimestamp("Found containers: ", containerNames);
 
    // for each folder, call ConcatenateContainerLocalLogs
    containerNames.forEach((containerName) => { 
@@ -599,25 +605,25 @@ function CreateLogDB(sp: SupportPackageProps)
    logFiles.forEach((logFile) => {
       // The logName should be the name of the file without the path or the suffix
       const logName = logFile.split('/').pop()?.split('.').shift() as string;
-      console.log('Ingesting log file: ', logFile, ' as ', logName);
+      logWithTimestamp('Ingesting log file: ', logFile, ' as ', logName);
       const [first, last] = IngestTextualLogFileToDB(entries, logName, sp.files[logFile], colors[colorIndex].value);
       sp.fileAnalysis[logFile].firstEntry = first;
       sp.fileAnalysis[logFile].lastEntry = last;
       colorIndex++;
    });
 
-   console.log('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
+   logWithTimestamp('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
    entries.sort((a, b) => a.unixtimestamp - b.unixtimestamp);
    sp.entries = entries;
-   console.log('Log entries have been sorted by timestamp.');
+   logWithTimestamp('Log entries have been sorted by timestamp.');
 
-   console.log('Creating searchable log maps...');
+   logWithTimestamp('Creating searchable log maps...');
    sp.entries.forEach((entry, index) => {
 
       // componentMap
       if (!(entry.component in sp.componentMap))
       {
-         console.log('Adding component to componentMap: ', entry.component);
+         logWithTimestamp('Adding component to componentMap: ', entry.component);
          sp.componentMap[entry.component] = [];
       }
       sp.componentMap[entry.component].push(index);
@@ -625,7 +631,7 @@ function CreateLogDB(sp: SupportPackageProps)
       // severity
       if (!(entry.severity in sp.severityMap))
       {
-         console.log('Adding severity to severityMap: ', entry.severity);
+         logWithTimestamp('Adding severity to severityMap: ', entry.severity);
          sp.severityMap[entry.severity] = [];
       }  
       sp.severityMap[entry.severity].push(index);
@@ -633,13 +639,13 @@ function CreateLogDB(sp: SupportPackageProps)
       // files
       if (!(entry.file in sp.fileMap))
       {
-         console.log('Adding file to fileMap: ', entry.file);
+         logWithTimestamp('Adding file to fileMap: ', entry.file);
          sp.fileMap[entry.file] = [];
       }
       sp.fileMap[entry.file].push(index);
    });  
 
-   console.log('Searchable log maps have been created.');
+   logWithTimestamp('Searchable log maps have been created.');
 }
 
 // This function will perform the following actions:
@@ -663,22 +669,22 @@ function PostProcessSupportPackage(sp: SupportPackageProps, contents: string)
             
       DecompressSupportPackage(sp, binaryContents);
       
-      console.log('Support package has been decompressed, attempting to process it');
+      logWithTimestamp('Support package has been decompressed, attempting to process it');
       
       DecodeSupportPackageTxt(sp, 'SupportPackage.txt');
    
-      console.log('Attempting to concatenate old Wiser Home logs');
+      logWithTimestamp('Attempting to concatenate old Wiser Home logs');
       ConcatenateOldWiserHomeLogs(sp, 'log/', 'logs/wiser-home.log');
    
-      console.log('Attempting process any container local logs found in the support package');
+      logWithTimestamp('Attempting process any container local logs found in the support package');
       ConcatenateAllLocalLogs(sp);
    
-      console.log('Attempting to create a log structure from all files in /logs folder');
+      logWithTimestamp('Attempting to create a log structure from all files in /logs folder');
       CreateLogDB(sp);
    }
    catch (err)
    {
-      console.log('Error processing support package: ', err);
+      logWithTimestamp('Error processing support package: ', err);
    }
 }
 
@@ -786,12 +792,12 @@ export const supportPackageSlice = createSlice({
          PostProcessSupportPackage(state, action.payload);
       },
       applyFilter: (state, action) => {
-         console.log('applyFilter:', action.payload);
+         logWithTimestamp('applyFilter:', action.payload);
          state.filter = action.payload;
          ProcessFilteredLog(state);
       },
       applyChosenView: (state, action) => {
-         console.log('Applying chosen view: ', action.payload);
+         logWithTimestamp('Applying chosen view: ', action.payload);
          state.chosenView = action.payload;
          ProcessFilteredLog(state);
       }
