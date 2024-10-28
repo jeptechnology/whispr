@@ -739,10 +739,10 @@ function ProcessFilteredLog(sp: SupportPackageProps)
 
       if (sp.filter.includeUnixTimestamp)
       {
-         filteredLog += entry.unixtimestamp.toString() + ' ';
+         filteredLog += (entry.unixtimestamp.toString() + ' ');
       }
 
-      filteredLog += entry.color + entry.message + "\x1b[0m\n";
+      filteredLog += (entry.color + entry.message + "\x1b[0m\n");
    });
    
    sp.filteredLog = filteredLog.length > 0 ? filteredLog : 'No log entries found matching the filter criteria';

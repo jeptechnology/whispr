@@ -6,8 +6,6 @@ const LogViewer = () => {
 
     const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
 
-    console.log('LogViewer: filteredLog length is ', filteredLog?.length);
-
     return (
         <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
             <LazyLog 
