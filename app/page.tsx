@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect } from "react";
+import React, { Fragment, useContext, useEffect } from "react";
 import LogViewer from "./components/LogViewer"; // For log files
 import JsonViewer from "./components/JsonViewer"; // For json files
 import Analysis from "./components/Analysis";
@@ -27,9 +27,13 @@ const WhisprMainView = () => {
     const files = useAppSelector((state) => state.supportPackage.fileAnalysis);
     const dispatch = useAppDispatch();
 
+    const isSupportPackageUploaded = Object.keys(files).length > 0;
+    const isShowingLogsView = isSupportPackageUploaded && (chosenView === "<Logs>");
+
+    ["<Summary>", "<Logs>"];
+
     useEffect(() => {
         console.log('WhisprMainView.useEffect: chosenView=', chosenView);
-        console.log('filteredLogs=', filteredLog);
     }, [chosenView]);
 
     function onViewChosen(filename: string, displayAsJson: boolean) {
@@ -98,10 +102,16 @@ const WhisprMainView = () => {
                     <UploadSupportPackage/>
                 </div>
                 <div className="col-2">
-                    <FilePicker onFileSelected={onViewChosen}/>
+                    {
+                        isSupportPackageUploaded && (
+                            <FilePicker onFileSelected={onViewChosen}/>
+                        )
+                    }
                 </div>
                 <div className="col-3">
-                    <MultiSelect 
+                    {
+                        isShowingLogsView && (
+                            <MultiSelect 
                             value={filter.files} 
                             onChange={(e) => applyLogFilter(e.value)} 
                             options={logOptions} 
@@ -109,16 +119,23 @@ const WhisprMainView = () => {
                             filter placeholder="Select Logs" 
                             className="w-full md:w-20rem"
                             />
+                        )
+                    }
                 </div>
                 <div className="col-5">
-
-                    <Calendar id="start-time-calendar" 
-                        value={GetStartTime()} 
-                        onChange={(e) => applyStartTime(e.value)} 
-                        showTime 
-                        hourFormat="24"/>
-                    <label htmlFor="end-time-calendar"> To: </label>
-                    <Calendar id="end-time-calendar" value={GetEndTime()} onChange={(e) => applyEndTime(e.value)} showTime hourFormat="24" />
+                    {
+                        isShowingLogsView && (
+                            <Fragment>
+                                <Calendar id="start-time-calendar" 
+                                    value={GetStartTime()} 
+                                    onChange={(e) => applyStartTime(e.value)} 
+                                    showTime 
+                                    hourFormat="24"/>
+                                <label htmlFor="end-time-calendar"> To: </label>
+                                <Calendar id="end-time-calendar" value={GetEndTime()} onChange={(e) => applyEndTime(e.value)} showTime hourFormat="24" />
+                            </Fragment>
+                        )                        
+                    }
                 </div>
 
             </div>
