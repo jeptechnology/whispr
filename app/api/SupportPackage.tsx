@@ -52,6 +52,7 @@ export interface SupportPackageProps {
       timestampStart: number, // Start of the timestamp range
       timestampEnd: number, // End of the timestamp range
       includeUnixTimestamp: boolean, // Include the unix timestamp in the log output
+      colorize: boolean, // Colorize the log output
    };
 
    // Potentially very large blob of text that is the filtered log
@@ -748,7 +749,14 @@ function ProcessFilteredLog(sp: SupportPackageProps)
          filteredLog += (entry.unixtimestamp.toString() + ' ');
       }
 
-      filteredLog += (entry.color + entry.message + "\x1b[0m\n");
+      if (sp.filter.colorize)
+      {
+         filteredLog += (entry.color + entry.message + "\x1b[0m\n");
+      }
+      else
+      {
+         filteredLog += entry.message + "\n";
+      }
    });
    
    sp.filteredLog = filteredLog.length > 0 ? filteredLog : 'No log entries found matching the filter criteria';
@@ -781,6 +789,7 @@ export const supportPackageSlice = createSlice({
          timestampStart: 0, // Start of the timestamp range
          timestampEnd: 0, // End of the timestamp range
          includeUnixTimestamp: false, // Include the unix timestamp in the log output
+         colorize: false, // Colorize the log output
       },
 
       filteredLog: "", // Potentially very large blob of text that is the filtered log
