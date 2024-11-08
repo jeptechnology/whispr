@@ -613,21 +613,35 @@ function CreateLogDB(sp: SupportPackageProps)
       colorIndex++;
    });
 
-   logWithTimestamp('Sorting log entries by timestamp... this may take a while: we have ', sp.entries.length, ' entries');
-   entries.sort((a, b) => a.unixtimestamp - b.unixtimestamp);
+   logWithTimestamp('Sorting log entries by timestamp... this may take a while: we have ', entries.length, ' entries');
    sp.entries = entries;
+   sp.entries.sort((a, b) => a.unixtimestamp - b.unixtimestamp);
    logWithTimestamp('Log entries have been sorted by timestamp.');
 
    logWithTimestamp('Creating searchable log maps...');
+
+   var currentTimeStamp = 0;
+
    sp.entries.forEach((entry, index) => {
 
-      // componentMap
-      if (!(entry.component in sp.componentMap))
+      // timestamp check:
+      if (entry.unixtimestamp < currentTimeStamp)
       {
-         logWithTimestamp('Adding component to componentMap: ', entry.component);
-         sp.componentMap[entry.component] = [];
+         logWithTimestamp('Timestamp out of order: ', entry.unixtimestamp, ' < ', currentTimeStamp);
       }
-      sp.componentMap[entry.component].push(index);
+
+      currentTimeStamp = entry.unixtimestamp;
+
+      // componentMap
+      if (entry.component.length > 0)
+      {
+         if (!(entry.component in sp.componentMap))
+         {
+            logWithTimestamp('Adding component to componentMap: ', entry.component);
+            sp.componentMap[entry.component] = [];
+         }
+         sp.componentMap[entry.component].push(index);
+      }
 
       // severity
       if (!(entry.severity in sp.severityMap))
@@ -730,9 +744,17 @@ function ProcessFilteredLog(sp: SupportPackageProps)
    // This should be a concatenation of all the allowed log entries 
 
    let filteredLog = '';
-   allowedLineIndeces.sort().forEach((index) => {
+   allowedLineIndeces.sort((a, b) => a - b);
+   let currentIndex = 0;
+   allowedLineIndeces.forEach((value, index) => {
       
-      const entry = sp.entries[index];
+      if (value < currentIndex)
+      {
+         console.log('Missing entry: ', currentIndex, ' - ', value);
+      }
+      currentIndex = value;
+
+      const entry = sp.entries[value];
       
       // first ensure that if the start and end timestamps are set, that the log entry is within that range
       if (sp.filter.timestampStart !== 0 && entry.unixtimestamp < sp.filter.timestampStart)

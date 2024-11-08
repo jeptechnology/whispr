@@ -26,7 +26,6 @@ const FilePicker = ({ onFileSelected }: FilePickerProps) => {
     }
 
     useEffect(() => {
-      console.log("Files: ", files);
       let options = ["<Summary>", "<Logs>"];
 
       Object.keys(files ? files : {}).forEach((filename) => {

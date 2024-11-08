@@ -1,11 +1,11 @@
 import React from "react";
-import { LazyLog } from "@melloware/react-logviewer";
 import { useAppSelector, useAppDispatch } from "../hooks";
+import { SpeedDial } from 'primereact/speeddial';
+import { Tooltip } from 'primereact/tooltip';
 import { MenuItem } from 'primereact/menuitem';
 import { applyFilter } from '@/app/api/SupportPackage';
-import LogSpeedDial from "./LogSpeedDial";
 
-const LogViewer = () => {
+const LogSpeedDial = () => {
     const filteredLog = useAppSelector((state) => state.supportPackage.filteredLog);
     const filter = useAppSelector((state) => state.supportPackage.filter);
     const dispatch = useAppDispatch();
@@ -67,17 +67,11 @@ const LogViewer = () => {
 
 
     return (
-        <div className="col-12" style={{ height: "calc(100vh - 150px)" }}>
-            <LogSpeedDial/>
-            <LazyLog 
-                width={'90vw'}
-                caseInsensitive
-                enableHotKeys
-                enableSearch
-                text={filteredLog}                    
-            />
+        <div style={{ position: 'absolute', height: '350px' }}>
+            <Tooltip target=".speeddial-top-left .p-speeddial-action" position="left" />
+            <SpeedDial model={items} direction="down" className="speeddial-top-left left-0 top-0" />
         </div>
     );
 };
 
-export default LogViewer;
+export default LogSpeedDial;

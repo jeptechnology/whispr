@@ -32,8 +32,6 @@ export default function UploadSupportPackage() {
         let file = e.files[0];
         setTotalSize(file.size);
 
-        console.log('File Selected: ', file);
-
         // check that the file is a tarball
         if (file.name.split('.').pop() !== 'tgz') {
             toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Please upload a .tgz file' });

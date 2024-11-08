@@ -12,6 +12,7 @@ import { Calendar } from 'primereact/calendar';
 import { Nullable } from 'primereact/ts-helpers';
 import { MultiSelect } from 'primereact/multiselect';
 import { SelectItem } from 'primereact/selectitem';
+import LogSpeedDial from "./components/LogSpeedDial";
 
 // define the WhisprMainView component props
 export interface WhisprMainViewProps {
@@ -32,19 +33,12 @@ const WhisprMainView = () => {
 
     ["<Summary>", "<Logs>"];
 
-    useEffect(() => {
-        console.log('WhisprMainView.useEffect: chosenView=', chosenView);
-    }, [chosenView]);
-
     function onViewChosen(filename: string, displayAsJson: boolean) {
         
-        console.log('AppTopbar.onViewChosen: filename=', filename, ' displayAsJson=', displayAsJson);
         dispatch(applyChosenView(filename));
     }
 
     function applyLogFilter(logs: string[]) {
-        console.log('AppTopbar.applyLogFilter: logs=', logs);
-
         dispatch(applyFilter({...filter, files: logs}));
     }
 
@@ -63,12 +57,10 @@ const WhisprMainView = () => {
     }
 
     function applyStartTime(date: Nullable<Date>) {
-        console.log('AppTopbar.setStartTime: date=', date);
         dispatch(applyFilter({...filter, timestampStart: date?.getTime()}));        
     }
 
     function applyEndTime(date: Nullable<Date>) {
-        console.log('AppTopbar.setEndTime: date=', date);
         dispatch(applyFilter({...filter, timestampEnd: date?.getTime()}));
     }
 
@@ -142,18 +134,18 @@ const WhisprMainView = () => {
 
             </div>
             <div className="layout-main-container">
-                 <div className="layout-main">
-                 <div className="col-12" style={{ height: "calc(100vh - 200px)" }}>
-                {  chosenView == "<Summary>" ?
-                    (
-                       <Analysis/>
-                    ) 
-                  : (
-                       <LogViewer/>
-                    )
-                }
-            </div>            
+                <div className="layout-main">
+                    <div className="col-12">
+                            {  chosenView == "<Summary>" ?
+                              (
+                                <Analysis/>
+                              ) 
+                            : (
+                                <LogViewer/>
+                              )
+                            }
                     </div>
+                </div>                
             </div>
         </div>
     );

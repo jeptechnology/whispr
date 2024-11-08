@@ -61,7 +61,6 @@ const Analysis = () => {
 
         // Clean up and remove the link
         link.parentNode?.removeChild(link);        
-        console.log('Download file: ', filename);
     }
 
     const actionTemplate = (data: any) => {
