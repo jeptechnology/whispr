@@ -2,17 +2,16 @@
 
 import React, { Fragment, useContext, useEffect } from "react";
 import LogViewer from "./components/LogViewer"; // For log files
-import JsonViewer from "./components/JsonViewer"; // For json files
+// import JsonViewer from "./components/JsonViewer"; // For json files
 import Analysis from "./components/Analysis";
 import { applyFilter, applyChosenView } from '@/app/api/SupportPackage';
 import FilePicker from "./components/FilePicker";
 import UploadSupportPackage from "./components/UploadSupportPackage";
-import { useAppDispatch, useAppSelector, useAppStore } from "./hooks";
+import { useAppDispatch, useAppSelector } from "./hooks";
 import { Calendar } from 'primereact/calendar';
 import { Nullable } from 'primereact/ts-helpers';
 import { MultiSelect } from 'primereact/multiselect';
 import { SelectItem } from 'primereact/selectitem';
-import { Button } from "primereact/button";
 
 // define the WhisprMainView component props
 export interface WhisprMainViewProps {
@@ -86,29 +85,6 @@ const WhisprMainView = () => {
         return options;
     }
 
-    const onClickDownload = () => {
-        // Create blob link to download file
-        const url = window.URL.createObjectURL(
-            // crate a new blob with the file contents from files[filename]...
-            new Blob([filteredLog], { type: 'application/text' })            
-        );
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute(
-            'download',
-            'wiser.log.txt',
-        );
-
-        // Append to html link element page
-        document.body.appendChild(link);
-
-        // Start download
-        link.click();
-
-        // Clean up and remove the link
-        link.parentNode?.removeChild(link);        
-    }
-
     const logOptions = GetLogOptions();
 
     // If the chosen view is:
@@ -130,9 +106,6 @@ const WhisprMainView = () => {
                         isSupportPackageUploaded && (
                             <div className="flex flex-wrap gap-2">
                                 <FilePicker onFileSelected={onViewChosen}/>
-                                <Button type="button" icon="pi pi-download" 
-                                    tooltip="Download Current View"
-                                    rounded onClick={onClickDownload}/>
                             </div>
                         )
                     }
