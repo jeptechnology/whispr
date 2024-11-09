@@ -28,7 +28,17 @@ export default function DecodeLocalLogs(source: Uint8Array): string {
       // now that we have the length of this log line, make a note of the current position, and then decode the message
       const oldReaderLength = reader.len;
       reader.len = reader.pos + length;
-      var message = LogEntry.decode(reader);
+      
+      var message: LogEntry;
+
+      try {
+         message = LogEntry.decode(reader);
+      }
+      catch (e) {
+         message = new LogEntry();
+         message.line = "!!!!! Error decoding logs: " + e + " at position " + reader.pos;
+      }
+      
       reader.len = oldReaderLength;
 
       // We should expect to see the same length as we read in the first 4 bytes
