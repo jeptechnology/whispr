@@ -95,7 +95,7 @@ function DecodeLogfile(filename: string, contents: Uint8Array): string
    // if the filename is of the form: log/<name>/container.log.n (where n is a number) then we need to decode it as a protobuf message
    if (filename.startsWith('logs/') && filename.search('/container.log') > 0)
    {
-      return DecodeLogs(contents);
+      return DecodeLogs(contents, filename);
    }
    // otherwise we expect the contents to be a text file so we can convert each byte to a char:
    return new TextDecoder().decode(contents);

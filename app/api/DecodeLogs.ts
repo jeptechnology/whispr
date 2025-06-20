@@ -17,7 +17,26 @@ function ReadBigEndian32bit(reader: protobuf.Reader): number {
    return value;
 }
 
-export default function DecodeLocalLogs(source: Uint8Array): string {
+function IsStartOfMessage(reader: protobuf.Reader): boolean {
+   // We are at the start of a message if the next 3 bytes are 0x00, 0x00, 0x00
+   if (reader.pos + 5 > reader.len) {  // Check if we have enough bytes to read  
+      return false; // Not enough bytes to read a length
+   }
+
+   const buffer = reader.buf;
+   const offset = reader.pos; 
+   return (
+      // First 3 bytes must be 0x00, 0x00, 0x00
+      buffer[offset] === 0x00 &&
+      buffer[offset + 1] === 0x00 &&
+      buffer[offset + 2] === 0x00 &&
+      // We don't care about the 4th byte
+      // 5th byte must be a LineFeed (0x0A)
+      buffer[offset + 4] === 0x0A 
+   );   
+}
+
+export default function DecodeLocalLogs(source: Uint8Array, logName: string): string {
 
    let myFileContents ='';
    var reader = Reader.create(source);
@@ -30,23 +49,44 @@ export default function DecodeLocalLogs(source: Uint8Array): string {
       reader.len = reader.pos + length;
       
       var message: LogEntry;
-
+      var error = false;
       try {
          message = LogEntry.decode(reader);
       }
       catch (e) {
          message = new LogEntry();
-         message.line = "!!!!! Error decoding logs: " + e + " at position " + reader.pos;
+         message.line = "!!!!! Decoding error in log file '" + logName + "': " + e;
+         error = true;
       }
       
       reader.len = oldReaderLength;
 
       // We should expect to see the same length as we read in the first 4 bytes
-      const lengthCheck = ReadBigEndian32bit(reader);
-      if (length != lengthCheck) 
+      if (!error)
       {
-         myFileContents += "!!!!! Length mismatch whjilst decoding logs: " + length + " != " + lengthCheck + " at position " + reader.pos + "\n";
-         break;
+         const lengthCheck = ReadBigEndian32bit(reader);
+         if (length != lengthCheck) 
+         {
+            message.line = "!!!!! Length mismatch in log file '" + logName + "': " + length + " != " + lengthCheck + " at position " + reader.pos;
+            error = true;
+         }
+      }
+      
+      if (error) 
+      {
+         const errorPosition = reader.pos;
+         // attempt to recover by skipping the rest of the message
+         while (!IsStartOfMessage(reader) && reader.pos < reader.len) {
+            reader.pos++;
+         }
+
+         if (reader.pos >= reader.len) {
+            message.line += " - reached end of file while trying to recover";
+         } else {
+            message.line += " - recovered, continuing to decode logs at position " + reader.pos;
+         }
+         const skippedText = new TextDecoder("utf-8").decode(source.slice(errorPosition, reader.pos));
+         message.line += ". Skipped text was: \n" + skippedText;         
       }
 
       // get timestamp in nanoseconds
