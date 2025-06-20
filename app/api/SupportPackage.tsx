@@ -16,6 +16,13 @@ const colors = [
    { name: "magenta", value: "\x1b[1;35m" },
    { name: "cyan", value: "\x1b[1;36m" },   
    { name: "grey", value: "\x1b[90m" },
+   { name: "brightWhite", value: "\x1b[1;37m" },
+   { name: "brightBlue", value: "\x1b[1;94m" },
+   { name: "brightGreen", value: "\x1b[1;92m" },
+   { name: "brightRed", value: "\x1b[1;91m" },
+   { name: "brightYellow", value: "\x1b[1;93m" },
+   { name: "brightMagenta", value: "\x1b[1;95m" },
+   { name: "brightCyan", value: "\x1b[1;96m" }
 ];
 
 const ResetColor = "\x1b[0m"
@@ -611,6 +618,10 @@ function CreateLogDB(sp: SupportPackageProps)
       sp.fileAnalysis[logFile].firstEntry = first;
       sp.fileAnalysis[logFile].lastEntry = last;
       colorIndex++;
+      if (colorIndex >= colors.length)
+      {
+         colorIndex = 0; // reset the color index if we run out of colors
+      }
    });
 
    logWithTimestamp('Sorting log entries by timestamp... this may take a while: we have ', entries.length, ' entries');
